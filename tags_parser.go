@@ -50,17 +50,17 @@ func parseTags(r io.Reader, table TagHeaderTable, options *ParseOptions) ([]*Tag
 		if hdr.Offset > uint32(currentOffset) {
 			skip := int64(hdr.Offset - uint32(currentOffset))
 			if _, err := io.CopyN(io.Discard, r, skip); err != nil {
-				return nil, fmt.Errorf("failed to skip to tag %s at 0x%X: %w", hdr.Signature, hdr.Offset, err)
+				return nil, fmt.Errorf("failed to skip to tag %q at 0x%X: %w", hdr.Signature, hdr.Offset, err)
 			}
 			currentOffset = int(hdr.Offset)
 		}
 		if hdr.Offset < uint32(currentOffset) {
-			return nil, fmt.Errorf("tag %s has offset 0x%X before current stream position 0x%X", hdr.Signature, hdr.Offset, currentOffset)
+			return nil, fmt.Errorf("tag %q has offset 0x%X before current stream position 0x%X", hdr.Signature, hdr.Offset, currentOffset)
 		}
 		// read the tag data...
 		raw := make([]byte, hdr.Size)
 		if _, err := io.ReadFull(r, raw); err != nil {
-			return nil, fmt.Errorf("failed to read tag %s at 0x%X: %w", hdr.Signature, hdr.Offset, err)
+			return nil, fmt.Errorf("failed to read tag %q at 0x%X: %w", hdr.Signature, hdr.Offset, err)
 		}
 		currentOffset += int(hdr.Size)
 		signature := stringed(raw[0:4]) // first 4 bytes of tag block are the tag type
@@ -76,19 +76,18 @@ func parseTags(r io.Reader, table TagHeaderTable, options *ParseOptions) ([]*Tag
 		}
 		if block.decoder == nil {
 			if options.ErrorOnUnknownTags {
-				return nil, fmt.Errorf("unknown tag %s at 0x%X", signature, hdr.Offset)
+				return nil, fmt.Errorf("unknown tag %q at 0x%X", signature, hdr.Offset)
 			}
-			block.error = fmt.Errorf("unknown tag %s", signature)
+			block.error = fmt.Errorf("unknown tag %q", signature)
 			offsetCache[hdr.Offset] = block
+			result = append(result, block)
 			continue
 		}
 		if !options.LazyTagDecode && block.error == nil {
-			if block.value, block.error = block.decoder(block.Raw, block.Headers); block.error != nil {
-				return nil, fmt.Errorf("failed to decode tag %s at 0x%X: %w", signature, hdr.Offset, block.error)
-			}
+			block.value, block.error = block.decoder(block.Raw, block.Headers)
 		}
 		if options.ErrorOnTagDecode && block.error != nil {
-			return nil, fmt.Errorf("failed to decode tag %s at 0x%X: %w", signature, hdr.Offset, block.error)
+			return nil, fmt.Errorf("failed to decode tag %q at 0x%X: %w", signature, hdr.Offset, block.error)
 		}
 		offsetCache[hdr.Offset] = block
 		result = append(result, block)
