@@ -27,8 +27,6 @@ func (t *Tag) Value() (any, error) {
 	return t.value, t.error
 }
 
-var tagSigs = map[string]bool{}
-
 func parseTags(r io.Reader, table TagHeaderTable, options *ParseOptions) ([]*Tag, error) {
 	// sort headers by offset...
 	headers := make([]TagHeader, len(table.Entries))
@@ -65,8 +63,7 @@ func parseTags(r io.Reader, table TagHeaderTable, options *ParseOptions) ([]*Tag
 			return nil, fmt.Errorf("failed to read tag %s at 0x%X: %w", hdr.Signature, hdr.Offset, err)
 		}
 		currentOffset += int(hdr.Size)
-		signature := stringed(raw[0:4]) // First 4 bytes of tag block are the tag type
-		tagSigs[signature] = true
+		signature := stringed(raw[0:4]) // first 4 bytes of tag block are the tag type
 		block := &Tag{
 			Headers:   []TagHeader{hdr},
 			Signature: signature,
