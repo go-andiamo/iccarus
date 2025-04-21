@@ -8,12 +8,12 @@ import (
 
 type Tag struct {
 	Headers   []TagHeader
-	Signature string // e.g. "desc", "XYZ "
+	Signature string // e.g. "desc", "XYZ"
 	Raw       []byte
 	value     any
 	lazy      bool
 	error     error
-	decoder   func(hdrSignature string, raw []byte) (any, error)
+	decoder   func(raw []byte, hdrs []TagHeader) (any, error)
 }
 
 func (t *Tag) Value() (any, error) {
@@ -21,13 +21,13 @@ func (t *Tag) Value() (any, error) {
 		return nil, t.error
 	}
 	if t.lazy {
-		t.value, t.error = t.decoder(t.Signature, t.Raw)
+		t.value, t.error = t.decoder(t.Raw, t.Headers)
 		t.lazy = false
 	}
 	return t.value, t.error
 }
 
-//var tagSigs = map[string]bool{}
+var tagSigs = map[string]bool{}
 
 func parseTags(r io.Reader, table TagHeaderTable, options *ParseOptions) ([]*Tag, error) {
 	// sort headers by offset...
@@ -66,7 +66,7 @@ func parseTags(r io.Reader, table TagHeaderTable, options *ParseOptions) ([]*Tag
 		}
 		currentOffset += int(hdr.Size)
 		signature := stringed(raw[0:4]) // First 4 bytes of tag block are the tag type
-		//tagSigs[signature] = true
+		tagSigs[signature] = true
 		block := &Tag{
 			Headers:   []TagHeader{hdr},
 			Signature: signature,
@@ -86,7 +86,7 @@ func parseTags(r io.Reader, table TagHeaderTable, options *ParseOptions) ([]*Tag
 			continue
 		}
 		if !options.LazyTagDecode && block.error == nil {
-			if block.value, block.error = block.decoder(hdr.Signature, block.Raw); block.error != nil {
+			if block.value, block.error = block.decoder(block.Raw, block.Headers); block.error != nil {
 				return nil, fmt.Errorf("failed to decode tag %s at 0x%X: %w", signature, hdr.Offset, block.error)
 			}
 		}
@@ -96,9 +96,29 @@ func parseTags(r io.Reader, table TagHeaderTable, options *ParseOptions) ([]*Tag
 	return result, nil
 }
 
-var defaultDecoders = map[string]func(hdrSignature string, raw []byte) (any, error){
-	"desc": descDecoder,
-	"text": textDecoder,
-	"sig":  sigDecoder,
-	"mluc": mlucDecoder,
+var defaultDecoders map[string]func(raw []byte, hdrs []TagHeader) (any, error)
+
+func init() {
+	defaultDecoders = map[string]func(raw []byte, hdrs []TagHeader) (any, error){
+		"desc": descDecoder,
+		"text": textDecoder,
+		"sig":  sigDecoder,
+		"mluc": mlucDecoder,
+		"XYZ":  xyzDecoder,
+		"curv": curveDecoder,
+		"para": parametricCurveDecoder,
+		"meas": measurementDecoder,
+		"view": viewDecoder,
+		"psid": psidDecoder,
+		"pseq": pseqDecoder,
+		"gbd":  gbdDecoder,
+		"mft2": mft2Decoder,
+		"mft1": mft1Decoder,
+		"sf32": sf32Decoder,
+		"mAB":  mABDecoder,
+		"mBA":  mBADecoder,
+		"dict": dictDecoder,
+		"ZXML": zxmlDecoder,
+		"MSBN": msbnDecoder,
+	}
 }

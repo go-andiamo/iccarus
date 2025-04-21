@@ -15,7 +15,7 @@ type ParseOptions struct {
 	LazyTagDecode      bool
 	ErrorOnUnknownTags bool
 	TagFilter          func(hdrSignature string, signature string) bool
-	TagDecoders        map[string]func(hdrSignature string, raw []byte) (any, error)
+	TagDecoders        map[string]func(raw []byte, hdrs []TagHeader) (any, error)
 }
 
 type Profile struct {

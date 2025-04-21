@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 )
 
-//go:embed default/*.icc
+//go:embed default/*.icc adobe/CMYK/*.icc adobe/RGB/*.icc basiccolor/gcr/*.icc basiccolor/2009/*.icc eci/*.icc icc/*.icc icc-srgb/*.icc
 var contents embed.FS
 
 // default/*.icc adobe/CMYK/*.icc adobe/RGB/*.icc basiccolor/gcr/*.icc basiccolor/2009/*.icc eci/*.icc icc/*.icc icc-srgb/*.icc

@@ -19,7 +19,7 @@ func TestParseProfile(t *testing.T) {
 			defer func() {
 				_ = f.Close()
 			}()
-			p, err := ParseProfile(f, &ParseOptions{Mode: ParseFull})
+			p, err := ParseProfile(f, &ParseOptions{Mode: ParseFull, ErrorOnUnknownTags: true})
 			require.NoError(t, err)
 			require.NotNil(t, p)
 			for _, e := range p.TagHeaderTable.Entries {
@@ -33,12 +33,10 @@ func TestParseProfile(t *testing.T) {
 	}
 	slices.Sort(keys)
 	fmt.Printf("%s\n", strings.Join(keys, "\n"))
-	/*
-		fmt.Printf("%d sigs\n", len(tagSigs))
-		for k := range tagSigs {
-			fmt.Printf("'%s'\n", k)
-		}
-	*/
+	fmt.Printf("%d sigs\n", len(tagSigs))
+	for k := range tagSigs {
+		fmt.Printf("'%s'\n", k)
+	}
 }
 
 func TestSharedTagOffsets(t *testing.T) {
