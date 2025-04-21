@@ -17,7 +17,6 @@ func descDecoder(raw []byte, _ []TagHeader) (any, error) {
 	if len(raw) < 12 {
 		return nil, fmt.Errorf("desc tag too short")
 	}
-
 	asciiLen := int(binary.BigEndian.Uint32(raw[8:12]))
 	if asciiLen < 1 || 12+asciiLen > len(raw) {
 		return nil, fmt.Errorf("invalid ASCII length in desc tag")
@@ -39,11 +38,7 @@ func descDecoder(raw []byte, _ []TagHeader) (any, error) {
 	}
 	unicodeData := raw[offset : offset+(unicodeCount*2)]
 	offset += unicodeCount * 2
-
-	unicode, err := decodeUTF16BE(unicodeData)
-	if err != nil {
-		return nil, fmt.Errorf("invalid UTF-16 in desc tag: %w", err)
-	}
+	unicode := decodeUTF16BE(unicodeData)
 
 	if len(raw) <= offset {
 		return &DescTag{
@@ -71,7 +66,7 @@ func textDecoder(raw []byte, _ []TagHeader) (any, error) {
 		return nil, fmt.Errorf("text tag too short")
 	}
 	text := raw[8:]
-	text = bytes.TrimRight(text, "\x00 ")
+	text = bytes.TrimRight(text, "\x00")
 	return string(text), nil
 }
 
@@ -96,7 +91,6 @@ func mlucDecoder(raw []byte, _ []TagHeader) (any, error) {
 	if len(raw) < 16 {
 		return nil, fmt.Errorf("mluc tag too short")
 	}
-
 	count := int(binary.BigEndian.Uint32(raw[8:12]))
 	recordSize := int(binary.BigEndian.Uint32(raw[12:16]))
 	if recordSize != 12 {
@@ -105,11 +99,9 @@ func mlucDecoder(raw []byte, _ []TagHeader) (any, error) {
 	if len(raw) < 16+(count*recordSize) {
 		return nil, fmt.Errorf("mluc tag too small for %d records", count)
 	}
-
 	tag := &MultiLocalizedTag{Strings: make([]LocalizedString, 0, count)}
 	for i := 0; i < count; i++ {
 		base := 16 + i*recordSize
-
 		langCode := string(raw[base : base+2])
 		countryCode := string(raw[base+2 : base+4])
 		strLen := int(binary.BigEndian.Uint32(raw[base+4 : base+8]))
@@ -120,11 +112,7 @@ func mlucDecoder(raw []byte, _ []TagHeader) (any, error) {
 		}
 
 		strData := raw[strOffset : strOffset+strLen]
-		decoded, err := decodeUTF16BE(strData)
-		if err != nil {
-			return nil, fmt.Errorf("invalid UTF-16 string in mluc record %d: %w", i, err)
-		}
-
+		decoded := decodeUTF16BE(strData)
 		tag.Strings = append(tag.Strings, LocalizedString{
 			Language: langCode,
 			Country:  countryCode,
@@ -134,13 +122,10 @@ func mlucDecoder(raw []byte, _ []TagHeader) (any, error) {
 	return tag, nil
 }
 
-func decodeUTF16BE(data []byte) (string, error) {
-	if len(data)%2 != 0 {
-		return "", fmt.Errorf("odd length UTF-16BE string")
-	}
+func decodeUTF16BE(data []byte) string {
 	codeUnits := make([]uint16, len(data)/2)
 	for i := 0; i < len(data); i += 2 {
 		codeUnits[i/2] = binary.BigEndian.Uint16(data[i : i+2])
 	}
-	return string(utf16.Decode(codeUnits)), nil
+	return string(utf16.Decode(codeUnits))
 }
