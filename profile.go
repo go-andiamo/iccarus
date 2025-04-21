@@ -14,6 +14,7 @@ type ParseOptions struct {
 	Mode               ParseMode
 	LazyTagDecode      bool
 	ErrorOnUnknownTags bool
+	ErrorOnTagDecode   bool // only if LazyTagDecode is false
 	TagFilter          func(hdrSignature string, signature string) bool
 	TagDecoders        map[string]func(raw []byte, hdrs []TagHeader) (any, error)
 }

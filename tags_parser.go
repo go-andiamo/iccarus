@@ -90,6 +90,9 @@ func parseTags(r io.Reader, table TagHeaderTable, options *ParseOptions) ([]*Tag
 				return nil, fmt.Errorf("failed to decode tag %s at 0x%X: %w", signature, hdr.Offset, block.error)
 			}
 		}
+		if options.ErrorOnTagDecode && block.error != nil {
+			return nil, fmt.Errorf("failed to decode tag %s at 0x%X: %w", signature, hdr.Offset, block.error)
+		}
 		offsetCache[hdr.Offset] = block
 		result = append(result, block)
 	}
@@ -100,25 +103,50 @@ var defaultDecoders map[string]func(raw []byte, hdrs []TagHeader) (any, error)
 
 func init() {
 	defaultDecoders = map[string]func(raw []byte, hdrs []TagHeader) (any, error){
-		"desc": descDecoder,
-		"text": textDecoder,
-		"sig":  sigDecoder,
-		"mluc": mlucDecoder,
-		"XYZ":  xyzDecoder,
 		"curv": curveDecoder,
-		"para": parametricCurveDecoder,
-		"meas": measurementDecoder,
-		"view": viewDecoder,
-		"psid": psidDecoder,
-		"pseq": pseqDecoder,
-		"gbd":  gbdDecoder,
-		"mft2": mft2Decoder,
-		"mft1": mft1Decoder,
-		"sf32": sf32Decoder,
-		"mAB":  mABDecoder,
-		"mBA":  mBADecoder,
+		"desc": descDecoder,
 		"dict": dictDecoder,
-		"ZXML": zxmlDecoder,
+		"gbd":  gbdDecoder,
+		"mAB":  modularDecoder,
+		"mBA":  modularDecoder,
+		"meas": measurementDecoder,
+		"mft1": mft1Decoder,
+		"mft2": mft2Decoder,
+		"mluc": mlucDecoder,
+		"para": parametricCurveDecoder,
+		"pseq": pseqDecoder,
+		"psid": psidDecoder,
+		"sf32": sf32Decoder,
+		"sig":  sigDecoder,
+		"text": textDecoder,
+		"view": viewDecoder,
+		"XYZ":  xyzDecoder,
 		"MSBN": msbnDecoder,
+		"ZXML": zxmlDecoder,
 	}
 }
+
+/*
+var defaultDecoders = map[string]func(raw []byte, hdrs []TagHeader) (any, error){
+	"curv": curveDecoder,
+	"desc": descDecoder,
+	"dict": dictDecoder,
+	"gbd":  gbdDecoder,
+	"mAB":  mABDecoder,
+	"mBA":  mBADecoder,
+	"meas": measurementDecoder,
+	"mft1": mft1Decoder,
+	"mft2": mft2Decoder,
+	"mluc": mlucDecoder,
+	"para": parametricCurveDecoder,
+	"pseq": pseqDecoder,
+	"psid": psidDecoder,
+	"sf32": sf32Decoder,
+	"sig":  sigDecoder,
+	"text": textDecoder,
+	"view": viewDecoder,
+	"XYZ":  xyzDecoder,
+	"MSBN": msbnDecoder,
+	"ZXML": zxmlDecoder,
+}
+*/

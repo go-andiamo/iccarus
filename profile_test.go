@@ -19,7 +19,7 @@ func TestParseProfile(t *testing.T) {
 			defer func() {
 				_ = f.Close()
 			}()
-			p, err := ParseProfile(f, &ParseOptions{Mode: ParseFull, ErrorOnUnknownTags: true})
+			p, err := ParseProfile(f, &ParseOptions{Mode: ParseFull, ErrorOnUnknownTags: true, ErrorOnTagDecode: true})
 			require.NoError(t, err)
 			require.NotNil(t, p)
 			for _, e := range p.TagHeaderTable.Entries {
@@ -46,7 +46,9 @@ func TestSharedTagOffsets(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			f, err := profiles.Open(name)
 			require.NoError(t, err)
-			defer f.Close()
+			defer func() {
+				_ = f.Close()
+			}()
 
 			profile, err := ParseProfile(f, nil)
 			require.NoError(t, err)
