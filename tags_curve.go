@@ -2,6 +2,7 @@ package iccarus
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 )
 
@@ -26,7 +27,7 @@ type ParametricCurveTag struct {
 
 func curveDecoder(raw []byte, _ []TagHeader) (any, error) {
 	if len(raw) < 12 {
-		return nil, fmt.Errorf("curv tag too short")
+		return nil, errors.New("curv tag too short")
 	}
 	count := int(binary.BigEndian.Uint32(raw[8:12]))
 	if count == 0 {
@@ -34,14 +35,14 @@ func curveDecoder(raw []byte, _ []TagHeader) (any, error) {
 	}
 	if count == 1 {
 		if len(raw) < 14 {
-			return nil, fmt.Errorf("curv tag missing gamma value")
+			return nil, errors.New("curv tag missing gamma value")
 		}
 		// 8.8 fixed-point
 		gammaRaw := binary.BigEndian.Uint16(raw[12:14])
 		return &CurveTag{Type: CurveTypeGamma, Gamma: float64(gammaRaw) / 256.0}, nil
 	}
 	if len(raw) < 12+(count*2) {
-		return nil, fmt.Errorf("curv tag truncated")
+		return nil, errors.New("curv tag truncated")
 	}
 	points := make([]uint16, count)
 	for i := 0; i < count; i++ {
@@ -52,7 +53,7 @@ func curveDecoder(raw []byte, _ []TagHeader) (any, error) {
 
 func parametricCurveDecoder(raw []byte, _ []TagHeader) (any, error) {
 	if len(raw) < 12 {
-		return nil, fmt.Errorf("para tag too short")
+		return nil, errors.New("para tag too short")
 	}
 	funcType := binary.BigEndian.Uint16(raw[8:10])
 	var expected int
@@ -70,13 +71,14 @@ func parametricCurveDecoder(raw []byte, _ []TagHeader) (any, error) {
 	default:
 		return nil, fmt.Errorf("unknown parametric function type: %d", funcType)
 	}
-	if len(raw) < 12+(expected*4) {
+	offset := 10
+	if len(raw) < offset+(expected*4) {
 		return nil, fmt.Errorf("para tag truncated for function %d", funcType)
 	}
 	params := make([]float64, expected)
 	for i := 0; i < expected; i++ {
-		f := Fixed1616(binary.BigEndian.Uint32(raw[12+(i*4) : 16+(i*4)]))
-		params[i] = f.Float64()
+		params[i] = readS15Fixed16BE(raw[offset : offset+4])
+		offset += 4
 	}
 	return &ParametricCurveTag{
 		FunctionType: funcType,

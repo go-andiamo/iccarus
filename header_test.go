@@ -40,7 +40,9 @@ func TestParseHeader(t *testing.T) {
 				assert.Equal(t, "", hdr.Model)
 				assert.Equal(t, [8]byte{}, hdr.Attributes)
 				assert.Equal(t, uint32(0), hdr.RenderingIntent)
-				assert.Equal(t, [3]Fixed1616{0xf6d6, 0x10000, 0xd32d}, hdr.Illuminant)
+				assert.InDelta(t, 0.964202880859375, hdr.Illuminant[0], 0.001)
+				assert.InDelta(t, 1.0, hdr.Illuminant[1], 0.001)
+				assert.InDelta(t, 0.8249053955078125, hdr.Illuminant[2], 0.001)
 				assert.Equal(t, "HDM", hdr.Creator)
 			}
 		})
@@ -55,14 +57,6 @@ func TestParseICCHeader_Errors(t *testing.T) {
 	r2 := bytes.NewReader(make([]byte, 128))
 	_, err = parseHeader(r2)
 	assert.Error(t, err)
-}
-
-func TestFixed1616_Float64(t *testing.T) {
-	ff := Fixed1616(16)
-	f := ff.Float64()
-	assert.Equal(t, 0.000244140625, f)
-
-	assert.Equal(t, 1.0, Fixed1616(0x00010000).Float64())
 }
 
 func TestVersion_String(t *testing.T) {

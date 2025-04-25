@@ -2,7 +2,7 @@ package iccarus
 
 import (
 	"encoding/binary"
-	"fmt"
+	"errors"
 )
 
 type ViewingConditionsTag struct {
@@ -13,18 +13,18 @@ type ViewingConditionsTag struct {
 
 func viewDecoder(raw []byte, _ []TagHeader) (any, error) {
 	if len(raw) < 36 {
-		return nil, fmt.Errorf("view tag too short")
+		return nil, errors.New("view tag too short")
 	}
 	return &ViewingConditionsTag{
 		Illuminant: XYZNumber{
-			X: Fixed1616(binary.BigEndian.Uint32(raw[8:12])).Float64(),
-			Y: Fixed1616(binary.BigEndian.Uint32(raw[12:16])).Float64(),
-			Z: Fixed1616(binary.BigEndian.Uint32(raw[16:20])).Float64(),
+			X: readS15Fixed16BE(raw[8:12]),
+			Y: readS15Fixed16BE(raw[12:16]),
+			Z: readS15Fixed16BE(raw[16:20]),
 		},
 		Surround: XYZNumber{
-			X: Fixed1616(binary.BigEndian.Uint32(raw[20:24])).Float64(),
-			Y: Fixed1616(binary.BigEndian.Uint32(raw[24:28])).Float64(),
-			Z: Fixed1616(binary.BigEndian.Uint32(raw[28:32])).Float64(),
+			X: readS15Fixed16BE(raw[20:24]),
+			Y: readS15Fixed16BE(raw[24:28]),
+			Z: readS15Fixed16BE(raw[28:32]),
 		},
 		IlluminantType: binary.BigEndian.Uint32(raw[32:36]),
 	}, nil

@@ -3,6 +3,7 @@ package iccarus
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"unicode/utf16"
 )
@@ -15,11 +16,11 @@ type DescTag struct {
 
 func descDecoder(raw []byte, _ []TagHeader) (any, error) {
 	if len(raw) < 12 {
-		return nil, fmt.Errorf("desc tag too short")
+		return nil, errors.New("desc tag too short")
 	}
 	asciiLen := int(binary.BigEndian.Uint32(raw[8:12]))
 	if asciiLen < 1 || 12+asciiLen > len(raw) {
-		return nil, fmt.Errorf("invalid ASCII length in desc tag")
+		return nil, errors.New("invalid ASCII length in desc tag")
 	}
 	ascii := raw[12 : 12+asciiLen]
 	if i := bytes.IndexByte(ascii, 0); i >= 0 {
@@ -34,7 +35,7 @@ func descDecoder(raw []byte, _ []TagHeader) (any, error) {
 	unicodeCount := int(binary.BigEndian.Uint32(raw[offset : offset+4]))
 	offset += 4
 	if len(raw) < offset+(unicodeCount*2) {
-		return nil, fmt.Errorf("desc tag truncated: missing UTF-16 data")
+		return nil, errors.New("desc tag truncated: missing UTF-16 data")
 	}
 	unicodeData := raw[offset : offset+(unicodeCount*2)]
 	offset += unicodeCount * 2
@@ -50,7 +51,7 @@ func descDecoder(raw []byte, _ []TagHeader) (any, error) {
 	scriptCount := int(raw[offset])
 	offset++
 	if len(raw) < offset+scriptCount {
-		return nil, fmt.Errorf("desc tag truncated: missing ScriptCode data")
+		return nil, errors.New("desc tag truncated: missing ScriptCode data")
 	}
 	script := string(raw[offset : offset+scriptCount])
 
@@ -63,7 +64,7 @@ func descDecoder(raw []byte, _ []TagHeader) (any, error) {
 
 func textDecoder(raw []byte, _ []TagHeader) (any, error) {
 	if len(raw) < 8 {
-		return nil, fmt.Errorf("text tag too short")
+		return nil, errors.New("text tag too short")
 	}
 	text := raw[8:]
 	text = bytes.TrimRight(text, "\x00")
@@ -72,7 +73,7 @@ func textDecoder(raw []byte, _ []TagHeader) (any, error) {
 
 func sigDecoder(raw []byte, _ []TagHeader) (any, error) {
 	if len(raw) < 8 {
-		return nil, fmt.Errorf("sig tag too short")
+		return nil, errors.New("sig tag too short")
 	}
 	return stringed(raw[8:12]), nil
 }
@@ -89,7 +90,7 @@ type LocalizedString struct {
 
 func mlucDecoder(raw []byte, _ []TagHeader) (any, error) {
 	if len(raw) < 16 {
-		return nil, fmt.Errorf("mluc tag too short")
+		return nil, errors.New("mluc tag too short")
 	}
 	count := int(binary.BigEndian.Uint32(raw[8:12]))
 	recordSize := int(binary.BigEndian.Uint32(raw[12:16]))

@@ -27,16 +27,9 @@ type Header struct {
 	Model           string
 	Attributes      [8]byte
 	RenderingIntent uint32
-	Illuminant      [3]Fixed1616
+	Illuminant      [3]float64
 	Creator         string
 	ProfileID       [16]byte
-}
-
-// Fixed1616 represents a 32-bit signed fixed-point number with 15 bits of integer and 16 bits of fractional precision
-type Fixed1616 uint32
-
-func (n Fixed1616) Float64() float64 {
-	return float64(n) / 65536.0
 }
 
 func parseHeader(r io.Reader) (Header, error) {
@@ -74,10 +67,10 @@ func parseHeader(r io.Reader) (Header, error) {
 		Model:           stringed(buf[52:56]),
 		Attributes:      [8]byte(buf[56:64]),
 		RenderingIntent: binary.BigEndian.Uint32(buf[64:68]),
-		Illuminant: [3]Fixed1616{
-			Fixed1616(binary.BigEndian.Uint32(buf[68:72])),
-			Fixed1616(binary.BigEndian.Uint32(buf[72:76])),
-			Fixed1616(binary.BigEndian.Uint32(buf[76:80])),
+		Illuminant: [3]float64{
+			readS15Fixed16BE(buf[68:72]),
+			readS15Fixed16BE(buf[72:76]),
+			readS15Fixed16BE(buf[76:80]),
 		},
 		Creator:   stringed(buf[80:84]),
 		ProfileID: profileId,
