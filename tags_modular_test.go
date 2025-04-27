@@ -3,6 +3,7 @@ package iccarus
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -90,4 +91,96 @@ func TestModularDecoder(t *testing.T) {
 func TestIsASCII(t *testing.T) {
 	assert.True(t, isASCII([]byte("foob`")))
 	assert.False(t, isASCII([]byte{0, 0, 0, 0}))
+}
+
+func TestModularTag_transformChannels(t *testing.T) {
+	t.Run("Success", func(t *testing.T) {
+		mod := &ModularTag{
+			InputChannels:  3,
+			OutputChannels: 3,
+			Elements: []*Tag{
+				{
+					Signature: "curv",
+					value:     &mockTransformer{offset: 1.0},
+				},
+				{
+					Signature: "curv",
+					value:     &mockTransformer{offset: 2.0},
+				},
+			},
+		}
+
+		result, err := mod.transformChannels([]float64{0.1, 0.2, 0.3})
+		require.NoError(t, err)
+		require.Len(t, result, 3)
+
+		assert.InDelta(t, 0.1+1.0+2.0, result[0], 0.001)
+		assert.InDelta(t, 0.2+1.0+2.0, result[1], 0.001)
+		assert.InDelta(t, 0.3+1.0+2.0, result[2], 0.001)
+	})
+
+	t.Run("WrongChannelCount", func(t *testing.T) {
+		mod := &ModularTag{InputChannels: 3}
+		_, err := mod.transformChannels([]float64{0.1, 0.2}) // only 2 channels
+		assert.ErrorContains(t, err, "expected 3 input channels")
+	})
+
+	t.Run("NoTransformers", func(t *testing.T) {
+		mod := &ModularTag{
+			InputChannels: 3,
+			Elements: []*Tag{
+				{
+					Signature: "noop", // value is nil
+				},
+			},
+		}
+		_, err := mod.transformChannels([]float64{0.1, 0.2, 0.3})
+		assert.ErrorContains(t, err, "no transformable elements")
+	})
+
+	t.Run("DecodeFails", func(t *testing.T) {
+		mod := &ModularTag{
+			InputChannels: 3,
+			Elements: []*Tag{
+				{
+					Signature: TagCurve,
+					error:     errors.New("decode failed"),
+				},
+			},
+		}
+		_, err := mod.transformChannels([]float64{0.1, 0.2, 0.3})
+		assert.ErrorContains(t, err, "failed decoding modular element")
+	})
+
+	t.Run("TransformerFails", func(t *testing.T) {
+		mod := &ModularTag{
+			InputChannels: 3,
+			Elements: []*Tag{
+				{
+					Signature: TagCurve,
+					value:     &mockFailTransformer{},
+				},
+			},
+		}
+		_, err := mod.transformChannels([]float64{0.1, 0.2, 0.3})
+		assert.ErrorContains(t, err, "failed processing modular element")
+	})
+}
+
+type mockTransformer struct {
+	offset float64
+}
+
+func (m *mockTransformer) Transform(channels []float64) ([]float64, error) {
+	result := make([]float64, len(channels))
+	for i, v := range channels {
+		result[i] = v + m.offset
+	}
+	return result, nil
+}
+
+type mockFailTransformer struct{}
+
+func (m *mockFailTransformer) Transform(_ []float64) ([]float64, error) {
+	return nil, errors.New("mock transform failure")
 }

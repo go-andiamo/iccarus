@@ -48,9 +48,13 @@ type Profile struct {
 	// TagHeaderTable is the tag headers
 	TagHeaderTable TagHeaderTable
 	// TagBlocks is the actual tag blocks (values)
-	TagBlocks    []*Tag
+	TagBlocks []*Tag
+	// tagsByHeader is a lookup of tags by header tag
 	tagsByHeader map[TagHeaderName]*Tag
-	tagsByName   map[TagName][]*Tag
+	// tagsByName is a lookup of actual tags
+	tagsByName map[TagName][]*Tag
+	a2b0       ToCIEXYZ
+	b2a0       FromCIEXYZ
 }
 
 // TagByHeader retrieves the Tag associated with a given TagHeaderName

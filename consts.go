@@ -1,13 +1,15 @@
 package iccarus
 
-type TagName string
-type TagHeaderName string
+type TagName = string
+type TagHeaderName = string
 
 const (
+	TagColorLookupTable           TagName = "clut"
 	TagCurve                      TagName = "curv"
 	TagDescription                TagName = "desc"
 	TagDictionary                 TagName = "dict"
 	TagGamutBoundaryDescription   TagName = "gbd"
+	TagMatrix                     TagName = "mtx"
 	TagModularAB                  TagName = "mAB"
 	TagModularBA                  TagName = "mBA"
 	TagMeasurement                TagName = "meas"

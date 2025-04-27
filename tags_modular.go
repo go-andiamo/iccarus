@@ -2,6 +2,7 @@ package iccarus
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 )
 
@@ -11,6 +12,9 @@ type ModularTag struct {
 	OutputChannels uint8
 	Elements       []*Tag
 }
+
+var _ ToCIEXYZ = (*ModularTag)(nil)
+var _ FromCIEXYZ = (*ModularTag)(nil)
 
 func modularDecoder(raw []byte, _ []TagHeader) (any, error) {
 	if len(raw) < 12 {
@@ -89,4 +93,40 @@ func decodeEmbeddedTag(tagSig string, raw []byte) *Tag {
 		result.value, result.error = result.decoder(raw, nil)
 	}
 	return result
+}
+
+func (m *ModularTag) ToCIEXYZ(channels ...float64) ([]float64, error) {
+	return m.transformChannels(channels)
+}
+
+func (m *ModularTag) FromCIEXYZ(channels ...float64) ([]float64, error) {
+	return m.transformChannels(channels)
+}
+
+func (m *ModularTag) transformChannels(channels []float64) ([]float64, error) {
+	if len(channels) != int(m.InputChannels) {
+		return nil, fmt.Errorf("expected %d input channels, got %d", m.InputChannels, len(channels))
+	}
+	result := channels
+	applied := false
+	for _, element := range m.Elements {
+		switch element.Signature {
+		case TagCurve, TagParametricCurve, TagMatrix, TagColorLookupTable:
+			val, err := element.Value()
+			if err != nil {
+				return nil, fmt.Errorf("failed decoding modular element %q: %w", element.Signature, err)
+			}
+			if proc, ok := val.(ChannelTransformer); ok {
+				result, err = proc.Transform(result)
+				if err != nil {
+					return nil, fmt.Errorf("failed processing modular element %q: %w", element.Signature, err)
+				}
+				applied = true
+			}
+		}
+	}
+	if !applied {
+		return nil, errors.New("modular tag has no transformable elements")
+	}
+	return result, nil
 }
