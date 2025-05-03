@@ -7,9 +7,9 @@ import (
 )
 
 type TagHeader struct {
-	Signature string // Signature (e.g., "desc", "rXYZ", "A2B0")
-	Offset    uint32 // Offset from beginning of file
-	Size      uint32 // Size of tag data in bytes
+	Name   TagHeaderName // Name (e.g., "desc", "rXYZ", "A2B0")
+	Offset uint32        // Offset from beginning of file
+	Size   uint32        // Size of tag data in bytes
 }
 
 type TagHeaderTable struct {
@@ -34,7 +34,7 @@ func parseTagHeaders(r io.Reader) (TagHeaderTable, error) {
 	entries := make([]TagHeader, count)
 	for i := uint32(0); i < count; i++ {
 		base := i * 12
-		entries[i].Signature = stringed(tagBytes[base : base+4])
+		entries[i].Name = stringed(tagBytes[base : base+4])
 		entries[i].Offset = binary.BigEndian.Uint32(tagBytes[base+4 : base+8])
 		entries[i].Size = binary.BigEndian.Uint32(tagBytes[base+8 : base+12])
 	}

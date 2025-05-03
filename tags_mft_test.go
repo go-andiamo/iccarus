@@ -44,7 +44,7 @@ func TestMFT2Decoder(t *testing.T) {
 			_ = binary.Write(&buf, binary.BigEndian, val)
 		}
 
-		val, err := mft2Decoder(buf.Bytes(), nil)
+		val, err := mft2Decoder(buf.Bytes())
 		require.NoError(t, err)
 		require.IsType(t, &MFT2Tag{}, val)
 
@@ -66,7 +66,7 @@ func TestMFT2Decoder(t *testing.T) {
 
 	t.Run("TooShort", func(t *testing.T) {
 		data := make([]byte, 51) // less than required 52
-		_, err := mft2Decoder(data, nil)
+		_, err := mft2Decoder(data)
 		assert.ErrorContains(t, err, "mft2 tag too short")
 	})
 
@@ -82,7 +82,7 @@ func TestMFT2Decoder(t *testing.T) {
 		// DO NOT pad to 52 bytes!
 		// We want len(buf) < 52 so it fails early
 
-		_, err := mft2Decoder(buf.Bytes(), nil)
+		_, err := mft2Decoder(buf.Bytes())
 		assert.ErrorContains(t, err, "mft2 tag too short")
 	})
 
@@ -93,7 +93,7 @@ func TestMFT2Decoder(t *testing.T) {
 		buf.Write(make([]byte, 36))                           // dummy matrix
 		_ = binary.Write(&buf, binary.BigEndian, uint16(100)) // input curve size too big
 		_ = binary.Write(&buf, binary.BigEndian, uint16(4))   // output curve size
-		_, err := mft2Decoder(buf.Bytes(), nil)
+		_, err := mft2Decoder(buf.Bytes())
 		assert.ErrorContains(t, err, "mft2: input curve 0 out of bounds")
 	})
 
@@ -110,7 +110,7 @@ func TestMFT2Decoder(t *testing.T) {
 		_ = binary.Write(&buf, binary.BigEndian, uint16(12345)) // junk input curve data
 
 		// too little for CLUT
-		_, err := mft2Decoder(buf.Bytes(), nil)
+		_, err := mft2Decoder(buf.Bytes())
 		assert.ErrorContains(t, err, "mft2: clut out of bounds")
 	})
 }
@@ -145,7 +145,7 @@ func TestMFT1Decoder(t *testing.T) {
 			buf.WriteByte(byte(i))
 		}
 
-		val, err := mft1Decoder(buf.Bytes(), nil)
+		val, err := mft1Decoder(buf.Bytes())
 		require.NoError(t, err)
 		require.IsType(t, &MFT1Tag{}, val)
 
@@ -171,7 +171,7 @@ func TestMFT1Decoder(t *testing.T) {
 
 	t.Run("TooShort", func(t *testing.T) {
 		data := make([]byte, 47) // less than required 48 bytes
-		_, err := mft1Decoder(data, nil)
+		_, err := mft1Decoder(data)
 		assert.ErrorContains(t, err, "mft1 tag too short")
 	})
 }

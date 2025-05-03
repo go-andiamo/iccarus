@@ -20,7 +20,7 @@ func TestMeasurementDecoder(t *testing.T) {
 		buf.Write(encodeS15Fixed16BE(0.125))                // Flare = 0.125
 		_ = binary.Write(&buf, binary.BigEndian, uint32(3)) // Illuminant
 
-		val, err := measurementDecoder(buf.Bytes(), nil)
+		val, err := measurementDecoder(buf.Bytes())
 		assert.NoError(t, err)
 
 		tag := val.(*MeasurementTag)
@@ -35,7 +35,7 @@ func TestMeasurementDecoder(t *testing.T) {
 
 	t.Run("TooShort", func(t *testing.T) {
 		data := make([]byte, 35) // < 36
-		_, err := measurementDecoder(data, nil)
+		_, err := measurementDecoder(data)
 		assert.ErrorContains(t, err, "meas tag too short")
 	})
 }

@@ -6,7 +6,7 @@ import (
 	"math"
 )
 
-func sf32Decoder(raw []byte, _ []TagHeader) (any, error) {
+func sf32Decoder(raw []byte) (any, error) {
 	if len(raw) < 8 {
 		return nil, errors.New("sf32 tag too short")
 	}

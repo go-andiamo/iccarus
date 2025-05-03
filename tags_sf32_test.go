@@ -21,7 +21,7 @@ func TestSF32Decoder(t *testing.T) {
 			_ = binary.Write(&buf, binary.BigEndian, bits)
 		}
 
-		val, err := sf32Decoder(buf.Bytes(), nil)
+		val, err := sf32Decoder(buf.Bytes())
 		require.NoError(t, err)
 		require.IsType(t, []float32{}, val)
 
@@ -35,14 +35,14 @@ func TestSF32Decoder(t *testing.T) {
 	t.Run("TooShort", func(t *testing.T) {
 		// Only 6 bytes (less than required 8)
 		data := []byte{0, 1, 2, 3, 4, 5}
-		_, err := sf32Decoder(data, nil)
+		_, err := sf32Decoder(data)
 		assert.ErrorContains(t, err, "sf32 tag too short")
 	})
 
 	t.Run("MisalignedFloatData", func(t *testing.T) {
 		// 8 bytes header + 5 byte float data = 13 total
 		buf := append([]byte("sf32\x00\x00\x00\x00"), []byte{1, 2, 3, 4, 5}...)
-		_, err := sf32Decoder(buf, nil)
+		_, err := sf32Decoder(buf)
 		assert.ErrorContains(t, err, "sf32 float32 data not aligned")
 	})
 }

@@ -48,7 +48,7 @@ func TestParseProfile(t *testing.T) {
 				assert.Equal(t, 13, len(p.TagBlocks))
 				tag, ok := p.TagByHeader(TagHeaderCopyright)
 				require.True(t, ok)
-				assert.Equal(t, string(TagText), tag.Signature)
+				assert.Equal(t, string(TagText), tag.Name)
 				val, err := p.TagValue(TagHeaderCopyright)
 				require.NoError(t, err)
 				assert.IsType(t, "", val)

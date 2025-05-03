@@ -19,7 +19,7 @@ func TestXYZDecoder(t *testing.T) {
 		buf.Write(encodeS15Fixed16BE(1.0))    // Y
 		buf.Write(encodeS15Fixed16BE(0.8249)) // Z
 
-		val, err := xyzDecoder(buf.Bytes(), nil)
+		val, err := xyzDecoder(buf.Bytes())
 		require.NoError(t, err)
 		require.IsType(t, []XYZNumber{}, val)
 
@@ -32,7 +32,7 @@ func TestXYZDecoder(t *testing.T) {
 
 	t.Run("TooShort", func(t *testing.T) {
 		raw := make([]byte, 19) // less than required 20
-		_, err := xyzDecoder(raw, nil)
+		_, err := xyzDecoder(raw)
 		assert.ErrorContains(t, err, "XYZ tag too short")
 	})
 
@@ -41,7 +41,7 @@ func TestXYZDecoder(t *testing.T) {
 		buf.WriteString("XYZ ")
 		buf.Write([]byte{0, 0, 0, 0}) // reserved
 		buf.Write(make([]byte, 13))   // not a multiple of 12
-		_, err := xyzDecoder(buf.Bytes(), nil)
+		_, err := xyzDecoder(buf.Bytes())
 		assert.ErrorContains(t, err, "invalid length")
 	})
 }

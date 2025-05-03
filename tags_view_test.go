@@ -26,7 +26,7 @@ func TestViewDecoder(t *testing.T) {
 		// Illuminant Type = 3
 		buf.Write([]byte{0x00, 0x00, 0x00, 0x03})
 
-		val, err := viewDecoder(buf.Bytes(), nil)
+		val, err := viewDecoder(buf.Bytes())
 		require.NoError(t, err)
 		require.IsType(t, &ViewingConditionsTag{}, val)
 		view := val.(*ViewingConditionsTag)
@@ -44,7 +44,7 @@ func TestViewDecoder(t *testing.T) {
 
 	t.Run("TooShort", func(t *testing.T) {
 		data := make([]byte, 35) // one byte too short
-		_, err := viewDecoder(data, nil)
+		_, err := viewDecoder(data)
 		assert.ErrorContains(t, err, "view tag too short")
 	})
 }

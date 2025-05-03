@@ -6,14 +6,18 @@ import (
 	"slices"
 )
 
+// Tag is a representation of an ICC Color profile tag
 type Tag struct {
-	Headers   []TagHeader
-	Signature string // e.g. "desc", "XYZ"
-	Raw       []byte
-	value     any
-	lazy      bool
-	error     error
-	decoder   func(raw []byte, hdrs []TagHeader) (any, error)
+	// Headers is the headers that use this tag
+	Headers []TagHeader
+	// Name is the TagName of the tag
+	Name TagName // e.g. "desc", "XYZ"
+	// Raw is the raw byte data of the tag
+	Raw     []byte
+	value   any
+	lazy    bool
+	error   error
+	decoder func(raw []byte) (any, error)
 }
 
 func (t *Tag) Value() (any, error) {
@@ -21,7 +25,7 @@ func (t *Tag) Value() (any, error) {
 		return nil, t.error
 	}
 	if t.lazy {
-		t.value, t.error = t.decoder(t.Raw, t.Headers)
+		t.value, t.error = t.decoder(t.Raw)
 		t.lazy = false
 	}
 	return t.value, t.error
@@ -50,26 +54,26 @@ func parseTags(r io.Reader, table TagHeaderTable, options *ParseOptions) ([]*Tag
 		if hdr.Offset > uint32(currentOffset) {
 			skip := int64(hdr.Offset - uint32(currentOffset))
 			if _, err := io.CopyN(io.Discard, r, skip); err != nil {
-				return nil, fmt.Errorf("failed to skip to tag %q at 0x%X: %w", hdr.Signature, hdr.Offset, err)
+				return nil, fmt.Errorf("failed to skip to tag %q at 0x%X: %w", hdr.Name, hdr.Offset, err)
 			}
 			currentOffset = int(hdr.Offset)
 		}
 		if hdr.Offset < uint32(currentOffset) {
-			return nil, fmt.Errorf("tag %q has offset 0x%X before current stream position 0x%X", hdr.Signature, hdr.Offset, currentOffset)
+			return nil, fmt.Errorf("tag %q has offset 0x%X before current stream position 0x%X", hdr.Name, hdr.Offset, currentOffset)
 		}
 		// read the tag data...
 		raw := make([]byte, hdr.Size)
 		if _, err := io.ReadFull(r, raw); err != nil {
-			return nil, fmt.Errorf("failed to read tag %q at 0x%X: %w", hdr.Signature, hdr.Offset, err)
+			return nil, fmt.Errorf("failed to read tag %q at 0x%X: %w", hdr.Name, hdr.Offset, err)
 		}
 		currentOffset += int(hdr.Size)
 		signature := stringed(raw[0:4]) // first 4 bytes of tag block are the tag type
 		block := &Tag{
-			Headers:   []TagHeader{hdr},
-			Signature: signature,
-			Raw:       raw,
-			lazy:      options.LazyTagDecode,
-			decoder:   defaultDecoders[signature],
+			Headers: []TagHeader{hdr},
+			Name:    signature,
+			Raw:     raw,
+			lazy:    options.LazyTagDecode,
+			decoder: defaultDecoders[signature],
 		}
 		if decoder, ok := options.TagDecoders[signature]; ok {
 			block.decoder = decoder
@@ -84,7 +88,7 @@ func parseTags(r io.Reader, table TagHeaderTable, options *ParseOptions) ([]*Tag
 			continue
 		}
 		if !options.LazyTagDecode && block.error == nil {
-			block.value, block.error = block.decoder(block.Raw, block.Headers)
+			block.value, block.error = block.decoder(block.Raw)
 		}
 		if options.ErrorOnTagDecode && block.error != nil {
 			return nil, fmt.Errorf("failed to decode tag %q at 0x%X: %w", signature, hdr.Offset, block.error)
@@ -95,10 +99,10 @@ func parseTags(r io.Reader, table TagHeaderTable, options *ParseOptions) ([]*Tag
 	return result, nil
 }
 
-var defaultDecoders map[string]func(raw []byte, hdrs []TagHeader) (any, error)
+var defaultDecoders map[string]func(raw []byte) (any, error)
 
 func init() {
-	defaultDecoders = map[string]func(raw []byte, hdrs []TagHeader) (any, error){
+	defaultDecoders = map[string]func(raw []byte) (any, error){
 		TagColorLookupTable:           clutDecoder,
 		TagCurve:                      curveDecoder,
 		TagDescription:                descDecoder,

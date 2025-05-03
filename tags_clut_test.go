@@ -24,7 +24,7 @@ func TestCLUTDecoder(t *testing.T) {
 			_ = binary.Write(&buf, binary.BigEndian, val)
 		}
 
-		val, err := clutDecoder(buf.Bytes(), nil)
+		val, err := clutDecoder(buf.Bytes())
 		require.NoError(t, err)
 		require.IsType(t, &CLUTTag{}, val)
 
@@ -40,7 +40,7 @@ func TestCLUTDecoder(t *testing.T) {
 
 	t.Run("TooShort", func(t *testing.T) {
 		data := make([]byte, 15) // should be at least 16 bytes
-		_, err := clutDecoder(data, nil)
+		_, err := clutDecoder(data)
 		assert.ErrorContains(t, err, "clut tag too short")
 	})
 
@@ -57,7 +57,7 @@ func TestCLUTDecoder(t *testing.T) {
 			buf.WriteByte(0)
 		}
 
-		_, err := clutDecoder(buf.Bytes(), nil)
+		_, err := clutDecoder(buf.Bytes())
 		assert.ErrorContains(t, err, "clut body size must be even")
 	})
 
@@ -75,7 +75,7 @@ func TestCLUTDecoder(t *testing.T) {
 			_ = binary.Write(&buf, binary.BigEndian, uint16(i*1234))
 		}
 
-		_, err := clutDecoder(buf.Bytes(), nil)
+		_, err := clutDecoder(buf.Bytes())
 		assert.ErrorContains(t, err, "clut unexpected body length")
 	})
 }

@@ -64,6 +64,15 @@ func TestProfile_ToCIEXYZ_Errors(t *testing.T) {
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "expected 3 input channels, got 0")
 	})
+
+	t.Run("Tag incorrect number of channels (cached)", func(t *testing.T) {
+		p := &Profile{
+			a2b0: &ModularTag{InputChannels: 3},
+		}
+		_, err := p.ToCIEXYZ()
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "expected 3 input channels, got 0")
+	})
 }
 
 func TestProfile_FromCIEXYZ_Errors(t *testing.T) {
@@ -118,6 +127,15 @@ func TestProfile_FromCIEXYZ_Errors(t *testing.T) {
 					value: &ModularTag{InputChannels: 3},
 				},
 			},
+		}
+		_, err := p.FromCIEXYZ()
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "expected 3 input channels, got 0")
+	})
+
+	t.Run("Tag incorrect number of channels (cached)", func(t *testing.T) {
+		p := &Profile{
+			b2a0: &ModularTag{InputChannels: 3},
 		}
 		_, err := p.FromCIEXYZ()
 		require.Error(t, err)

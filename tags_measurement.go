@@ -13,7 +13,7 @@ type MeasurementTag struct {
 	Illuminant uint32
 }
 
-func measurementDecoder(raw []byte, _ []TagHeader) (any, error) {
+func measurementDecoder(raw []byte) (any, error) {
 	if len(raw) < 36 {
 		return nil, errors.New("meas tag too short")
 	}

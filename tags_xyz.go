@@ -8,7 +8,7 @@ type XYZNumber struct {
 	X, Y, Z float64
 }
 
-func xyzDecoder(raw []byte, _ []TagHeader) (any, error) {
+func xyzDecoder(raw []byte) (any, error) {
 	if len(raw) < 20 {
 		return nil, errors.New("XYZ tag too short")
 	}

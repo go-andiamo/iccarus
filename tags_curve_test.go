@@ -13,7 +13,7 @@ func TestCurveDecoder(t *testing.T) {
 	t.Run("IdentityCurve", func(t *testing.T) {
 		raw := []byte("curv\x00\x00\x00\x00" + // sig + reserved
 			"\x00\x00\x00\x00") // count = 0
-		val, err := curveDecoder([]byte(raw), nil)
+		val, err := curveDecoder(raw)
 		require.NoError(t, err)
 		require.IsType(t, &CurveTag{}, val)
 		c := val.(*CurveTag)
@@ -24,7 +24,7 @@ func TestCurveDecoder(t *testing.T) {
 		raw := []byte("curv\x00\x00\x00\x00" + // sig + reserved
 			"\x00\x00\x00\x01" + // count = 1
 			"\x01\x00") // gamma = 1.0
-		val, err := curveDecoder([]byte(raw), nil)
+		val, err := curveDecoder(raw)
 		require.NoError(t, err)
 		require.IsType(t, &CurveTag{}, val)
 		c := val.(*CurveTag)
@@ -36,7 +36,7 @@ func TestCurveDecoder(t *testing.T) {
 		raw := []byte("curv\x00\x00\x00\x00" + // sig + reserved
 			"\x00\x00\x00\x03" + // count = 3
 			"\x00\x10\x00\x20\x00\x30") // 3 x uint16
-		val, err := curveDecoder([]byte(raw), nil)
+		val, err := curveDecoder(raw)
 		require.NoError(t, err)
 		require.IsType(t, &CurveTag{}, val)
 		c := val.(*CurveTag)
@@ -45,14 +45,14 @@ func TestCurveDecoder(t *testing.T) {
 	})
 
 	t.Run("TooShort", func(t *testing.T) {
-		_, err := curveDecoder(make([]byte, 11), nil)
+		_, err := curveDecoder(make([]byte, 11))
 		assert.ErrorContains(t, err, "curv tag too short")
 	})
 
 	t.Run("MissingGamma", func(t *testing.T) {
 		raw := []byte("curv\x00\x00\x00\x00" +
 			"\x00\x00\x00\x01") // count = 1 (but no gamma value)
-		_, err := curveDecoder(raw, nil)
+		_, err := curveDecoder(raw)
 		assert.ErrorContains(t, err, "curv tag missing gamma value")
 	})
 
@@ -60,7 +60,7 @@ func TestCurveDecoder(t *testing.T) {
 		raw := []byte("curv\x00\x00\x00\x00" +
 			"\x00\x00\x00\x02" + // count = 2
 			"\x00\x10") // missing second uint16
-		_, err := curveDecoder(raw, nil)
+		_, err := curveDecoder(raw)
 		assert.ErrorContains(t, err, "curv tag truncated")
 	})
 }
@@ -73,7 +73,7 @@ func TestParametricCurveDecoder(t *testing.T) {
 		_ = binary.Write(&buf, binary.BigEndian, uint16(0)) // function type 0
 		buf.Write(encodeS15Fixed16BE(1.0))                  // 1.0
 
-		val, err := parametricCurveDecoder(buf.Bytes(), nil)
+		val, err := parametricCurveDecoder(buf.Bytes())
 		require.NoError(t, err)
 		require.IsType(t, &ParametricCurveTag{}, val)
 		p := val.(*ParametricCurveTag)
@@ -90,7 +90,7 @@ func TestParametricCurveDecoder(t *testing.T) {
 		for i := 0; i < 3; i++ {
 			buf.Write(encodeS15Fixed16BE(float64(i)))
 		}
-		val, err := parametricCurveDecoder(buf.Bytes(), nil)
+		val, err := parametricCurveDecoder(buf.Bytes())
 		require.NoError(t, err)
 		require.IsType(t, &ParametricCurveTag{}, val)
 		p := val.(*ParametricCurveTag)
@@ -109,7 +109,7 @@ func TestParametricCurveDecoder(t *testing.T) {
 		for i := 0; i < 4; i++ {
 			buf.Write(encodeS15Fixed16BE(float64(i)))
 		}
-		val, err := parametricCurveDecoder(buf.Bytes(), nil)
+		val, err := parametricCurveDecoder(buf.Bytes())
 		require.NoError(t, err)
 		require.IsType(t, &ParametricCurveTag{}, val)
 		p := val.(*ParametricCurveTag)
@@ -129,7 +129,7 @@ func TestParametricCurveDecoder(t *testing.T) {
 		for i := 0; i < 5; i++ {
 			buf.Write(encodeS15Fixed16BE(float64(i)))
 		}
-		val, err := parametricCurveDecoder(buf.Bytes(), nil)
+		val, err := parametricCurveDecoder(buf.Bytes())
 		require.NoError(t, err)
 		require.IsType(t, &ParametricCurveTag{}, val)
 		p := val.(*ParametricCurveTag)
@@ -150,7 +150,7 @@ func TestParametricCurveDecoder(t *testing.T) {
 		for i := 0; i < 7; i++ {
 			buf.Write(encodeS15Fixed16BE(float64(i)))
 		}
-		val, err := parametricCurveDecoder(buf.Bytes(), nil)
+		val, err := parametricCurveDecoder(buf.Bytes())
 		require.NoError(t, err)
 		require.IsType(t, &ParametricCurveTag{}, val)
 		p := val.(*ParametricCurveTag)
@@ -166,7 +166,7 @@ func TestParametricCurveDecoder(t *testing.T) {
 	})
 
 	t.Run("TooShort", func(t *testing.T) {
-		_, err := parametricCurveDecoder(make([]byte, 11), nil)
+		_, err := parametricCurveDecoder(make([]byte, 11))
 		assert.ErrorContains(t, err, "para tag too short")
 	})
 
@@ -178,7 +178,7 @@ func TestParametricCurveDecoder(t *testing.T) {
 		for i := 0; i < 7; i++ {
 			_ = binary.Write(&buf, binary.BigEndian, uint32(0x00010000)) // 1.0
 		}
-		_, err := parametricCurveDecoder(buf.Bytes(), nil)
+		_, err := parametricCurveDecoder(buf.Bytes())
 		require.Error(t, err)
 		assert.ErrorContains(t, err, "unknown parametric function type: 5")
 	})
@@ -187,7 +187,7 @@ func TestParametricCurveDecoder(t *testing.T) {
 		raw := []byte("para\x00\x00\x00\x00" +
 			"\x00\x02" + // function type 2 (needs 4 params)
 			"\x00\x01\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00") // only 3 params
-		_, err := parametricCurveDecoder(raw, nil)
+		_, err := parametricCurveDecoder(raw)
 		assert.ErrorContains(t, err, "para tag truncated for function 2")
 	})
 }

@@ -36,7 +36,7 @@ func TestParseTags_Errors_RecordUnknownTag(t *testing.T) {
 	require.NoError(t, err)
 	tags, err := parseTags(f, tagHeaders, &ParseOptions{
 		// simulate unknown tag...
-		TagDecoders: map[string]func(raw []byte, hdrs []TagHeader) (any, error){
+		TagDecoders: map[string]func(raw []byte) (any, error){
 			"text": nil,
 		},
 	})
@@ -59,7 +59,7 @@ func TestParseTags_Errors_UnknownTag(t *testing.T) {
 	_, err = parseTags(f, tagHeaders, &ParseOptions{
 		// simulate unknown tag...
 		ErrorOnUnknownTags: true,
-		TagDecoders: map[string]func(raw []byte, hdrs []TagHeader) (any, error){
+		TagDecoders: map[string]func(raw []byte) (any, error){
 			"text": nil,
 		},
 	})
@@ -79,8 +79,8 @@ func TestParseTags_Errors_DecodeTag(t *testing.T) {
 	require.NoError(t, err)
 	_, err = parseTags(f, tagHeaders, &ParseOptions{
 		ErrorOnTagDecode: true,
-		TagDecoders: map[string]func(raw []byte, hdrs []TagHeader) (any, error){
-			"text": func(raw []byte, hdrs []TagHeader) (any, error) {
+		TagDecoders: map[string]func(raw []byte) (any, error){
+			"text": func(raw []byte) (any, error) {
 				return nil, errors.New("failed to decode tag")
 			},
 		},
@@ -100,8 +100,8 @@ func TestParseTags_Errors_RecordDecodeTag(t *testing.T) {
 	tagHeaders, err := parseTagHeaders(f)
 	require.NoError(t, err)
 	tags, err := parseTags(f, tagHeaders, &ParseOptions{
-		TagDecoders: map[string]func(raw []byte, hdrs []TagHeader) (any, error){
-			"text": func(raw []byte, hdrs []TagHeader) (any, error) {
+		TagDecoders: map[string]func(raw []byte) (any, error){
+			"text": func(raw []byte) (any, error) {
 				return nil, errors.New("failed to decode tag")
 			},
 		},
@@ -124,8 +124,8 @@ func TestParseTags_Errors_ReadError(t *testing.T) {
 	require.NoError(t, err)
 	_, err = parseTags(f, tagHeaders, &ParseOptions{
 		// simulate read error by reading from file...
-		TagDecoders: map[string]func(raw []byte, hdrs []TagHeader) (any, error){
-			"text": func(raw []byte, hdrs []TagHeader) (any, error) {
+		TagDecoders: map[string]func(raw []byte) (any, error){
+			"text": func(raw []byte) (any, error) {
 				_, _ = io.CopyN(io.Discard, f, 1024)
 				return nil, nil
 			},
@@ -172,7 +172,7 @@ func TestParseTags_Errors_SkipError(t *testing.T) {
 func TestTag_Value(t *testing.T) {
 	tag := &Tag{
 		lazy: true,
-		decoder: func(raw []byte, hdrs []TagHeader) (any, error) {
+		decoder: func(raw []byte) (any, error) {
 			return raw, nil
 		},
 	}

@@ -16,9 +16,9 @@ type ModularTag struct {
 var _ ToCIEXYZ = (*ModularTag)(nil)
 var _ FromCIEXYZ = (*ModularTag)(nil)
 
-func modularDecoder(raw []byte, _ []TagHeader) (any, error) {
+func modularDecoder(raw []byte) (any, error) {
 	if len(raw) < 12 {
-		return nil, fmt.Errorf("modular (mAB/mBA) tag too short: got %d bytes", len(raw))
+		return nil, errors.New("modular (mAB/mBA) tag too short")
 	}
 	inputCh := int(binary.BigEndian.Uint16(raw[8:10]))
 	outputCh := int(binary.BigEndian.Uint16(raw[10:12]))
@@ -82,15 +82,15 @@ func isASCII(b []byte) bool {
 
 func decodeEmbeddedTag(tagSig string, raw []byte) *Tag {
 	result := &Tag{
-		Signature: tagSig,
-		Raw:       raw,
-		decoder:   defaultDecoders[tagSig],
+		Name:    tagSig,
+		Raw:     raw,
+		decoder: defaultDecoders[tagSig],
 	}
 	if result.decoder == nil {
-		result.Signature = string(raw[:4])
+		result.Name = string(raw[:4])
 		result.error = fmt.Errorf("unknown embedded tag type: %q", tagSig)
 	} else {
-		result.value, result.error = result.decoder(raw, nil)
+		result.value, result.error = result.decoder(raw)
 	}
 	return result
 }
@@ -110,16 +110,16 @@ func (m *ModularTag) transformChannels(channels []float64) ([]float64, error) {
 	result := channels
 	applied := false
 	for _, element := range m.Elements {
-		switch element.Signature {
+		switch element.Name {
 		case TagCurve, TagParametricCurve, TagMatrix, TagColorLookupTable:
 			val, err := element.Value()
 			if err != nil {
-				return nil, fmt.Errorf("failed decoding modular element %q: %w", element.Signature, err)
+				return nil, fmt.Errorf("failed decoding modular element %q: %w", element.Name, err)
 			}
 			if proc, ok := val.(ChannelTransformer); ok {
 				result, err = proc.Transform(result)
 				if err != nil {
-					return nil, fmt.Errorf("failed processing modular element %q: %w", element.Signature, err)
+					return nil, fmt.Errorf("failed processing modular element %q: %w", element.Name, err)
 				}
 				applied = true
 			}

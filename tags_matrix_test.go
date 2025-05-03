@@ -10,7 +10,7 @@ import (
 func TestMtxDecoder(t *testing.T) {
 	t.Run("SuccessWithOffsets", func(t *testing.T) {
 		var buf bytes.Buffer
-		buf.WriteString("mtx ")       // Signature
+		buf.WriteString("mtx ")       // Name
 		buf.Write([]byte{0, 0, 0, 0}) // Reserved
 
 		// Write 9 matrix values
@@ -29,7 +29,7 @@ func TestMtxDecoder(t *testing.T) {
 			buf.Write(encodeS15Fixed16BE(v))
 		}
 
-		val, err := mtxDecoder(buf.Bytes(), nil)
+		val, err := mtxDecoder(buf.Bytes())
 		require.NoError(t, err)
 		require.IsType(t, &MatrixTag{}, val)
 
@@ -52,7 +52,7 @@ func TestMtxDecoder(t *testing.T) {
 
 	t.Run("SuccessWithoutOffsets", func(t *testing.T) {
 		var buf bytes.Buffer
-		buf.WriteString("mtx ")       // Signature
+		buf.WriteString("mtx ")       // Name
 		buf.Write([]byte{0, 0, 0, 0}) // Reserved
 
 		// Write only the 9 matrix values (no offsets)
@@ -65,7 +65,7 @@ func TestMtxDecoder(t *testing.T) {
 			buf.Write(encodeS15Fixed16BE(v))
 		}
 
-		val, err := mtxDecoder(buf.Bytes(), nil)
+		val, err := mtxDecoder(buf.Bytes())
 		require.NoError(t, err)
 		require.IsType(t, &MatrixTag{}, val)
 
@@ -82,7 +82,7 @@ func TestMtxDecoder(t *testing.T) {
 
 	t.Run("TooShort", func(t *testing.T) {
 		data := make([]byte, 20)
-		_, err := mtxDecoder(data, nil)
+		_, err := mtxDecoder(data)
 		assert.ErrorContains(t, err, "mtx tag too short")
 	})
 }

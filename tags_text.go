@@ -14,7 +14,7 @@ type DescTag struct {
 	Script  string
 }
 
-func descDecoder(raw []byte, _ []TagHeader) (any, error) {
+func descDecoder(raw []byte) (any, error) {
 	if len(raw) < 12 {
 		return nil, errors.New("desc tag too short")
 	}
@@ -62,7 +62,7 @@ func descDecoder(raw []byte, _ []TagHeader) (any, error) {
 	}, nil
 }
 
-func textDecoder(raw []byte, _ []TagHeader) (any, error) {
+func textDecoder(raw []byte) (any, error) {
 	if len(raw) < 8 {
 		return nil, errors.New("text tag too short")
 	}
@@ -71,7 +71,7 @@ func textDecoder(raw []byte, _ []TagHeader) (any, error) {
 	return string(text), nil
 }
 
-func sigDecoder(raw []byte, _ []TagHeader) (any, error) {
+func sigDecoder(raw []byte) (any, error) {
 	if len(raw) < 8 {
 		return nil, errors.New("sig tag too short")
 	}
@@ -88,7 +88,7 @@ type LocalizedString struct {
 	Value    string
 }
 
-func mlucDecoder(raw []byte, _ []TagHeader) (any, error) {
+func mlucDecoder(raw []byte) (any, error) {
 	if len(raw) < 16 {
 		return nil, errors.New("mluc tag too short")
 	}

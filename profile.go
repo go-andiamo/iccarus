@@ -38,7 +38,7 @@ type ParseOptions struct {
 	// only used when LazyTagDecode is false
 	ErrorOnTagDecode bool
 	// TagDecoders allows you to provide custom tag decoders (or override default tag decoders)
-	TagDecoders map[string]func(raw []byte, hdrs []TagHeader) (any, error)
+	TagDecoders map[string]func(raw []byte) (any, error)
 }
 
 // Profile represents the contents of an ICC Profile file
@@ -86,9 +86,9 @@ func (p *Profile) mapTags() {
 	p.tagsByHeader = make(map[TagHeaderName]*Tag)
 	p.tagsByName = make(map[TagName][]*Tag)
 	for _, tag := range p.TagBlocks {
-		p.tagsByName[TagName(tag.Signature)] = append(p.tagsByName[TagName(tag.Signature)], tag)
+		p.tagsByName[tag.Name] = append(p.tagsByName[tag.Name], tag)
 		for _, hdr := range tag.Headers {
-			p.tagsByHeader[TagHeaderName(hdr.Signature)] = tag
+			p.tagsByHeader[hdr.Name] = tag
 		}
 	}
 }

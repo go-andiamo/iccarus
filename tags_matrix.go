@@ -1,6 +1,7 @@
 package iccarus
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -11,13 +12,13 @@ type MatrixTag struct {
 
 var _ ChannelTransformer = (*MatrixTag)(nil)
 
-func mtxDecoder(raw []byte, _ []TagHeader) (any, error) {
+func mtxDecoder(raw []byte) (any, error) {
 	const (
 		minLength     = 8 + (9 * 4) // 8 bytes for type/reserved + 9 * 4-byte matrix numbers
 		offsetsLength = 12 * 4      // 4 * matrix numbers (4-byte) + 3 * offset numbers
 	)
 	if len(raw) < minLength {
-		return nil, fmt.Errorf("mtx tag too short: got %d bytes", len(raw))
+		return nil, errors.New("mtx tag too short")
 	}
 	result := &MatrixTag{}
 	body := raw[8:]

@@ -40,7 +40,7 @@ type ParametricCurveTag struct {
 
 var _ ChannelTransformer = (*ParametricCurveTag)(nil)
 
-func curveDecoder(raw []byte, _ []TagHeader) (any, error) {
+func curveDecoder(raw []byte) (any, error) {
 	if len(raw) < 12 {
 		return nil, errors.New("curv tag too short")
 	}
@@ -66,7 +66,7 @@ func curveDecoder(raw []byte, _ []TagHeader) (any, error) {
 	return &CurveTag{Type: CurveTypePoints, Points: points}, nil
 }
 
-func parametricCurveDecoder(raw []byte, _ []TagHeader) (any, error) {
+func parametricCurveDecoder(raw []byte) (any, error) {
 	if len(raw) < 12 {
 		return nil, errors.New("para tag too short")
 	}
@@ -113,7 +113,7 @@ func (c *CurveTag) Transform(input []float64) ([]float64, error) {
 		return []float64{math.Pow(v, c.Gamma)}, nil
 	case CurveTypePoints:
 		if len(c.Points) == 0 {
-			return nil, fmt.Errorf("curve has no points")
+			return nil, errors.New("curve has no points")
 		}
 		idx := v * float64(len(c.Points)-1)
 		lo := int(math.Floor(idx))
@@ -126,7 +126,7 @@ func (c *CurveTag) Transform(input []float64) ([]float64, error) {
 		vhi := float64(c.Points[hi]) / 65535.0
 		return []float64{vlo + p*(vhi-vlo)}, nil
 	default:
-		return nil, fmt.Errorf("unknown curve type")
+		return nil, errors.New("unknown curve type")
 	}
 }
 
@@ -140,13 +140,13 @@ func (p *ParametricCurveTag) Transform(input []float64) ([]float64, error) {
 	case SimpleGammaFunction:
 		// Y = X^g
 		if len(p.Parameters) != 1 {
-			return nil, fmt.Errorf("function 0 expects 1 parameter")
+			return nil, errors.New("function 0 expects 1 parameter")
 		}
 		result = math.Pow(x, p.Parameters[0])
 	case ConditionalZeroFunction:
 		// Y = (aX+b)^g if X ≥ -b/a else 0
 		if len(p.Parameters) != 3 {
-			return nil, fmt.Errorf("function 1 expects 3 parameters")
+			return nil, errors.New("function 1 expects 3 parameters")
 		}
 		a, b, g := p.Parameters[0], p.Parameters[1], p.Parameters[2]
 		if x >= -b/a {
@@ -157,7 +157,7 @@ func (p *ParametricCurveTag) Transform(input []float64) ([]float64, error) {
 	case ConditionalCFunction:
 		// Y = (aX+b)^g + c if X ≥ -b/a else c
 		if len(p.Parameters) != 4 {
-			return nil, fmt.Errorf("function 2 expects 4 parameters")
+			return nil, errors.New("function 2 expects 4 parameters")
 		}
 		a, b, g, c := p.Parameters[0], p.Parameters[1], p.Parameters[2], p.Parameters[3]
 		if x >= -b/a {
@@ -168,7 +168,7 @@ func (p *ParametricCurveTag) Transform(input []float64) ([]float64, error) {
 	case SplitFunction:
 		// Y = (aX+b)^g if X ≥ d else cX
 		if len(p.Parameters) != 5 {
-			return nil, fmt.Errorf("function 3 expects 5 parameters")
+			return nil, errors.New("function 3 expects 5 parameters")
 		}
 		a, b, g, c, d := p.Parameters[0], p.Parameters[1], p.Parameters[2], p.Parameters[3], p.Parameters[4]
 		if x >= d {
@@ -179,7 +179,7 @@ func (p *ParametricCurveTag) Transform(input []float64) ([]float64, error) {
 	case ComplexFunction:
 		// Y = (aX+b)^g + e if X ≥ d else cX+f
 		if len(p.Parameters) != 7 {
-			return nil, fmt.Errorf("function 4 expects 7 parameters")
+			return nil, errors.New("function 4 expects 7 parameters")
 		}
 		a, b, g, c, d, e, f := p.Parameters[0], p.Parameters[1], p.Parameters[2], p.Parameters[3], p.Parameters[4], p.Parameters[5], p.Parameters[6]
 		if x >= d {

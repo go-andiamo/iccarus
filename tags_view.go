@@ -11,7 +11,7 @@ type ViewingConditionsTag struct {
 	IlluminantType uint32
 }
 
-func viewDecoder(raw []byte, _ []TagHeader) (any, error) {
+func viewDecoder(raw []byte) (any, error) {
 	if len(raw) < 36 {
 		return nil, errors.New("view tag too short")
 	}

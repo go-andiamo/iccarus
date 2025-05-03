@@ -27,7 +27,7 @@ type MFT1Tag struct {
 	OutputCurves   [][]uint8 // Each output channel has a 256-entry curve
 }
 
-func mft2Decoder(raw []byte, _ []TagHeader) (any, error) {
+func mft2Decoder(raw []byte) (any, error) {
 	if len(raw) < 52 {
 		return nil, errors.New("mft2 tag too short")
 	}
@@ -108,7 +108,7 @@ func mft2Decoder(raw []byte, _ []TagHeader) (any, error) {
 	}, nil
 }
 
-func mft1Decoder(raw []byte, _ []TagHeader) (any, error) {
+func mft1Decoder(raw []byte) (any, error) {
 	if len(raw) < 48 {
 		return nil, errors.New("mft1 tag too short")
 	}

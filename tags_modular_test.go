@@ -12,7 +12,7 @@ import (
 func TestModularDecoder(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		var buf bytes.Buffer
-		buf.WriteString("mAB ")       // Signature (4 bytes)
+		buf.WriteString("mAB ")       // Name (4 bytes)
 		buf.Write([]byte{0, 0, 0, 0}) // Reserved (4 bytes)
 
 		// Input channels = 2, Output channels = 3
@@ -32,7 +32,7 @@ func TestModularDecoder(t *testing.T) {
 		buf.Write([]byte{0, 0, 0, 0}) // Reserved
 		buf.Write([]byte{0, 0, 0, 1}) // One curve point (1)
 
-		val, err := modularDecoder(buf.Bytes(), nil)
+		val, err := modularDecoder(buf.Bytes())
 		require.NoError(t, err)
 		require.IsType(t, &ModularTag{}, val)
 
@@ -45,7 +45,7 @@ func TestModularDecoder(t *testing.T) {
 
 	t.Run("HappyPathSingleElementNoOffsets", func(t *testing.T) {
 		var buf bytes.Buffer
-		buf.WriteString("mBA ")       // Signature (4 bytes)
+		buf.WriteString("mBA ")       // Name (4 bytes)
 		buf.Write([]byte{0, 0, 0, 0}) // Reserved
 
 		_ = binary.Write(&buf, binary.BigEndian, uint16(1)) // input
@@ -56,7 +56,7 @@ func TestModularDecoder(t *testing.T) {
 		buf.Write([]byte{0, 0, 0, 0})
 		buf.Write([]byte{0, 0, 0, 1})
 
-		val, err := modularDecoder(buf.Bytes(), nil)
+		val, err := modularDecoder(buf.Bytes())
 		require.NoError(t, err)
 		require.IsType(t, &ModularTag{}, val)
 
@@ -69,7 +69,7 @@ func TestModularDecoder(t *testing.T) {
 
 	t.Run("TooShort", func(t *testing.T) {
 		data := []byte{1, 2, 3}
-		_, err := modularDecoder(data, nil)
+		_, err := modularDecoder(data)
 		assert.ErrorContains(t, err, "modular (mAB/mBA) tag too short")
 	})
 
@@ -83,7 +83,7 @@ func TestModularDecoder(t *testing.T) {
 		// No offset table, but embedded tag is less than 8 bytes
 		buf.Write([]byte("bad"))
 
-		_, err := modularDecoder(buf.Bytes(), nil)
+		_, err := modularDecoder(buf.Bytes())
 		assert.ErrorContains(t, err, "modular (mAB/mBA): element 0 too short to contain header")
 	})
 }
@@ -100,12 +100,12 @@ func TestModularTag_transformChannels(t *testing.T) {
 			OutputChannels: 3,
 			Elements: []*Tag{
 				{
-					Signature: "curv",
-					value:     &mockTransformer{offset: 1.0},
+					Name:  "curv",
+					value: &mockTransformer{offset: 1.0},
 				},
 				{
-					Signature: "curv",
-					value:     &mockTransformer{offset: 2.0},
+					Name:  "curv",
+					value: &mockTransformer{offset: 2.0},
 				},
 			},
 		}
@@ -130,7 +130,7 @@ func TestModularTag_transformChannels(t *testing.T) {
 			InputChannels: 3,
 			Elements: []*Tag{
 				{
-					Signature: "noop", // value is nil
+					Name: "noop", // value is nil
 				},
 			},
 		}
@@ -143,8 +143,8 @@ func TestModularTag_transformChannels(t *testing.T) {
 			InputChannels: 3,
 			Elements: []*Tag{
 				{
-					Signature: TagCurve,
-					error:     errors.New("decode failed"),
+					Name:  TagCurve,
+					error: errors.New("decode failed"),
 				},
 			},
 		}
@@ -157,8 +157,8 @@ func TestModularTag_transformChannels(t *testing.T) {
 			InputChannels: 3,
 			Elements: []*Tag{
 				{
-					Signature: TagCurve,
-					value:     &mockFailTransformer{},
+					Name:  TagCurve,
+					value: &mockFailTransformer{},
 				},
 			},
 		}
