@@ -177,6 +177,7 @@ func decompressZlib(data []byte) ([]byte, error) {
 
 // ExtractFromWebP extracts ICC profile from a .webp image
 func ExtractFromWebP(r io.Reader, options *ParseOptions) (*Profile, error) {
+	const iccpChunk = "ICCP"
 	header := make([]byte, 12)
 	if _, err := io.ReadFull(r, header); err != nil {
 		return nil, fmt.Errorf("failed to read RIFF header: %w", err)
@@ -194,7 +195,7 @@ func ExtractFromWebP(r io.Reader, options *ParseOptions) (*Profile, error) {
 		}
 		chunkType := string(chunkHeader[:4])
 		chunkSize := binary.LittleEndian.Uint32(chunkHeader[4:8])
-		if chunkType == "ICCP" {
+		if chunkType == iccpChunk {
 			iccData := make([]byte, chunkSize)
 			if _, err := io.ReadFull(r, iccData); err != nil {
 				return nil, fmt.Errorf("failed to read ICCP chunk: %w", err)
