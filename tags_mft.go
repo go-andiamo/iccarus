@@ -106,14 +106,14 @@ func mft2Decoder(raw []byte) (any, error) {
 	}, nil
 }
 
-func (tag *MFT2Tag) Transform(input []float64) ([]float64, error) {
-	if len(input) != int(tag.InputChannels) {
-		return nil, fmt.Errorf("expected %d input channels, got %d", tag.InputChannels, len(input))
+func (tag *MFT2Tag) Transform(inputs ...float64) ([]float64, error) {
+	if len(inputs) != int(tag.InputChannels) {
+		return nil, fmt.Errorf("expected %d input channels, got %d", tag.InputChannels, len(inputs))
 	}
 	// Apply input curves with linear interpolation
 	mapped := make([]float64, tag.InputChannels)
 	for i := 0; i < int(tag.InputChannels); i++ {
-		val := clamp01(input[i])
+		val := clamp01(inputs[i])
 		curve := tag.InputCurves[i]
 		pos := val * float64(len(curve)-1)
 		lo := int(math.Floor(pos))
@@ -250,13 +250,13 @@ func mft1Decoder(raw []byte) (any, error) {
 	}, nil
 }
 
-func (m *MFT1Tag) Transform(input []float64) ([]float64, error) {
-	if len(input) != int(m.InputChannels) {
-		return nil, fmt.Errorf("mft1: expected %d input channels, got %d", m.InputChannels, len(input))
+func (m *MFT1Tag) Transform(inputs ...float64) ([]float64, error) {
+	if len(inputs) != int(m.InputChannels) {
+		return nil, fmt.Errorf("mft1: expected %d input channels, got %d", m.InputChannels, len(inputs))
 	}
 	// 1. Apply input curves
-	curved := make([]float64, len(input))
-	for i, v := range input {
+	curved := make([]float64, len(inputs))
+	for i, v := range inputs {
 		v = clamp01(v)
 		idx := int(v * 255.0)
 		if idx >= len(m.InputCurves[i]) {

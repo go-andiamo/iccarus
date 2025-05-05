@@ -4,6 +4,7 @@ import (
 	"errors"
 )
 
+// XYZNumber represents an XYZ tag (TagXYZ)
 type XYZNumber struct {
 	X, Y, Z float64
 }

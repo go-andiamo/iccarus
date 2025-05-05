@@ -21,27 +21,22 @@ func TestCLUTDecoder(t *testing.T) {
 			val := uint16((i * 65535) / (8*3 - 1)) // Spread nicely 0..65535
 			_ = binary.Write(&buf, binary.BigEndian, val)
 		}
-
 		val, err := clutDecoder(buf.Bytes())
 		require.NoError(t, err)
 		require.IsType(t, &CLUTTag{}, val)
-
 		clut := val.(*CLUTTag)
 		assert.Equal(t, uint8(3), clut.InputChannels)
 		assert.Equal(t, uint8(3), clut.OutputChannels)
 		assert.Equal(t, []uint8{2, 2, 2}, clut.GridPoints)
 		assert.Len(t, clut.Values, 8*3)
-
 		assert.InDelta(t, 0.0, clut.Values[0], 0.001)
 		assert.InDelta(t, 1.0, clut.Values[len(clut.Values)-1], 0.001) // <-- Now will pass!
 	})
-
 	t.Run("TooShort", func(t *testing.T) {
 		data := make([]byte, 15) // should be at least 16 bytes
 		_, err := clutDecoder(data)
 		assert.ErrorContains(t, err, "clut tag too short")
 	})
-
 	t.Run("BodyOddLength", func(t *testing.T) {
 		var buf bytes.Buffer
 		buf.WriteString("clut")
@@ -56,7 +51,6 @@ func TestCLUTDecoder(t *testing.T) {
 		_, err := clutDecoder(buf.Bytes())
 		assert.ErrorContains(t, err, "clut body size must be even")
 	})
-
 	t.Run("UnexpectedBodyLength", func(t *testing.T) {
 		var buf bytes.Buffer
 		buf.WriteString("clut")
@@ -83,16 +77,16 @@ func TestCLUTTransform(t *testing.T) {
 			Values:         []float64{0.0, 1.0}, // 2 values: for 1D input, 1 output channel
 		}
 		// Test input 0.0 → should return 0.0
-		out, err := clut.Transform([]float64{0.0})
+		out, err := clut.Transform(0.0)
 		require.NoError(t, err)
 		require.Len(t, out, 1)
 		assert.InDelta(t, 0.0, out[0], 1e-6)
 		// Test input 1.0 → should return 1.0
-		out, err = clut.Transform([]float64{1.0})
+		out, err = clut.Transform(1.0)
 		require.NoError(t, err)
 		assert.InDelta(t, 1.0, out[0], 1e-6)
 		// Test input 0.5 → should return 0.5 via interpolation
-		out, err = clut.Transform([]float64{0.5})
+		out, err = clut.Transform(0.5)
 		require.NoError(t, err)
 		assert.InDelta(t, 0.5, out[0], 1e-6)
 	})
@@ -106,10 +100,10 @@ func TestCLUTTransform(t *testing.T) {
 				0.4, 0.5, 0.6, 1.0,
 			}, // 8 points, 1 output each
 		}
-		out, err := clut.Transform([]float64{0.0, 0.0, 0.0}) // Should hit [0.0]
+		out, err := clut.Transform(0.0, 0.0, 0.0) // Should hit [0.0]
 		require.NoError(t, err)
 		assert.InDelta(t, 0.0, out[0], 1e-6)
-		out, err = clut.Transform([]float64{1.0, 1.0, 1.0}) // Should hit [1.0]
+		out, err = clut.Transform(1.0, 1.0, 1.0) // Should hit [1.0]
 		require.NoError(t, err)
 		assert.InDelta(t, 1.0, out[0], 1e-6)
 	})
@@ -120,7 +114,7 @@ func TestCLUTTransform(t *testing.T) {
 			GridPoints:     []uint8{2, 2, 2},
 			Values:         make([]float64, 8), // dummy
 		}
-		_, err := clut.Transform([]float64{0.5, 0.5}) // only 2 inputs
+		_, err := clut.Transform(0.5, 0.5) // only 2 inputs
 		assert.ErrorContains(t, err, "expected 3 input channels")
 	})
 	t.Run("EmptyCLUTValues", func(t *testing.T) {
@@ -130,7 +124,7 @@ func TestCLUTTransform(t *testing.T) {
 			GridPoints:     []uint8{2},
 			Values:         []float64{}, // empty
 		}
-		_, err := clut.Transform([]float64{0.0})
+		_, err := clut.Transform(0.0)
 		assert.ErrorContains(t, err, "not enough CLUT values")
 	})
 }
@@ -146,7 +140,6 @@ func TestCLUTTag_Lookup_MismatchErrors(t *testing.T) {
 		_, err := clut.Lookup([]float64{0.5, 0.5}) // only 2 inputs instead of 3
 		assert.ErrorContains(t, err, "expected 3 inputs")
 	})
-
 	t.Run("GridPointsMismatch", func(t *testing.T) {
 		clut := &CLUTTag{
 			InputChannels:  3,

@@ -19,10 +19,8 @@ func TestMeasurementDecoder(t *testing.T) {
 		_ = binary.Write(&buf, binary.BigEndian, uint32(2)) // Geometry
 		buf.Write(encodeS15Fixed16BE(0.125))                // Flare = 0.125
 		_ = binary.Write(&buf, binary.BigEndian, uint32(3)) // Illuminant
-
 		val, err := measurementDecoder(buf.Bytes())
 		assert.NoError(t, err)
-
 		tag := val.(*MeasurementTag)
 		assert.Equal(t, uint32(1), tag.Observer)
 		assert.InDelta(t, 1.0, tag.Backing.X, 0.00001)
@@ -32,7 +30,6 @@ func TestMeasurementDecoder(t *testing.T) {
 		assert.InDelta(t, 0.125, tag.Flare, 0.00001)
 		assert.Equal(t, uint32(3), tag.Illuminant)
 	})
-
 	t.Run("TooShort", func(t *testing.T) {
 		data := make([]byte, 35) // < 36
 		_, err := measurementDecoder(data)

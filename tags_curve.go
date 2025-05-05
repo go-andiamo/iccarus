@@ -15,6 +15,7 @@ const (
 	CurveTypePoints   CurveType = 2
 )
 
+// CurveTag represents a curve tag (TagCurve)
 type CurveTag struct {
 	Type   CurveType
 	Gamma  float64  // Type == CurveTypeGamma
@@ -33,6 +34,7 @@ const (
 	ComplexFunction         ParametricCurveFunction = 4 // More complex piecewise function
 )
 
+// ParametricCurveTag represents a parametric curve tag (TagParametricCurve)
 type ParametricCurveTag struct {
 	FunctionType ParametricCurveFunction
 	Parameters   []float64
@@ -101,11 +103,11 @@ func parametricCurveDecoder(raw []byte) (any, error) {
 	}, nil
 }
 
-func (c *CurveTag) Transform(input []float64) ([]float64, error) {
-	if len(input) != 1 {
-		return nil, fmt.Errorf("curve expects 1 input, got %d", len(input))
+func (c *CurveTag) Transform(inputs ...float64) ([]float64, error) {
+	if len(inputs) != 1 {
+		return nil, fmt.Errorf("curve expects 1 input, got %d", len(inputs))
 	}
-	v := input[0]
+	v := inputs[0]
 	switch c.Type {
 	case CurveTypeIdentity:
 		return []float64{v}, nil
@@ -130,11 +132,11 @@ func (c *CurveTag) Transform(input []float64) ([]float64, error) {
 	}
 }
 
-func (p *ParametricCurveTag) Transform(input []float64) ([]float64, error) {
-	if len(input) != 1 {
-		return nil, fmt.Errorf("parametric curve expects 1 input, got %d", len(input))
+func (p *ParametricCurveTag) Transform(inputs ...float64) ([]float64, error) {
+	if len(inputs) != 1 {
+		return nil, fmt.Errorf("parametric curve expects 1 input, got %d", len(inputs))
 	}
-	x := input[0]
+	x := inputs[0]
 	var result float64
 	switch p.FunctionType {
 	case SimpleGammaFunction:

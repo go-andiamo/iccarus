@@ -25,27 +25,22 @@ func TestReadS15Fixed16BE(t *testing.T) {
 		val := readS15Fixed16BE([]byte{0x00, 0x01, 0x00, 0x00}) // 1.0
 		assert.InDelta(t, 1.0, val, 0.0001)
 	})
-
 	t.Run("PositiveFraction", func(t *testing.T) {
 		val := readS15Fixed16BE([]byte{0x00, 0x02, 0x80, 0x00}) // 2.5
 		assert.InDelta(t, 2.5, val, 0.0001)
 	})
-
 	t.Run("NegativeWhole", func(t *testing.T) {
 		val := readS15Fixed16BE([]byte{0xFF, 0xFF, 0x00, 0x00}) // -1.0
 		assert.InDelta(t, -1.0, val, 0.0001)
 	})
-
 	t.Run("NegativeFraction", func(t *testing.T) {
 		val := readS15Fixed16BE([]byte{0xFF, 0xFE, 0x80, 0x00}) // -1.5
 		assert.InDelta(t, -1.5, val, 0.0001)
 	})
-
 	t.Run("Zero", func(t *testing.T) {
 		val := readS15Fixed16BE([]byte{0x00, 0x00, 0x00, 0x00})
 		assert.Equal(t, 0.0, val)
 	})
-
 	t.Run("PanicsOnShortInput", func(t *testing.T) {
 		assert.PanicsWithValue(t, "readS15Fixed16BE: not enough bytes", func() {
 			readS15Fixed16BE([]byte{0x00, 0x01, 0x00}) // only 3 bytes

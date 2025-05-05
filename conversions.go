@@ -5,16 +5,19 @@ import (
 	"fmt"
 )
 
+// ToCIEXYZ is an interface that provides conversion to CIEXYZ
 type ToCIEXYZ interface {
 	ToCIEXYZ(channels ...float64) ([]float64, error)
 }
 
+// FromCIEXYZ is an interface that provides conversion from CIEXYZ
 type FromCIEXYZ interface {
 	FromCIEXYZ(channels ...float64) ([]float64, error)
 }
 
+// ChannelTransformer is an interface for transforming channels
 type ChannelTransformer interface {
-	Transform(input []float64) ([]float64, error)
+	Transform(inputs ...float64) (outputs []float64, err error)
 }
 
 var _ ToCIEXYZ = (*Profile)(nil)

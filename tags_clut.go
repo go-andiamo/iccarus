@@ -6,6 +6,7 @@ import (
 	"fmt"
 )
 
+// CLUTTag represents a color lookup table tag (TagColorLookupTable)
 type CLUTTag struct {
 	GridPoints     []uint8 // e.g., [17,17,17] for 3D CLUT
 	InputChannels  uint8
@@ -66,14 +67,14 @@ func (c *CLUTTag) expected() int {
 	return c.expectedValues
 }
 
-func (c *CLUTTag) Transform(input []float64) ([]float64, error) {
-	if len(input) != int(c.InputChannels) {
-		return nil, fmt.Errorf("expected %d input channels, got %d", c.InputChannels, len(input))
+func (c *CLUTTag) Transform(inputs ...float64) ([]float64, error) {
+	if len(inputs) != int(c.InputChannels) {
+		return nil, fmt.Errorf("expected %d input channels, got %d", c.InputChannels, len(inputs))
 	}
 	if len(c.Values) < c.expected() {
 		return nil, fmt.Errorf("not enough CLUT values: expected %d, got %d", c.expected(), len(c.Values))
 	}
-	return c.Lookup(input)
+	return c.Lookup(inputs)
 }
 
 func (c *CLUTTag) Lookup(inputs []float64) ([]float64, error) {

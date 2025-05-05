@@ -5,6 +5,7 @@ import (
 	"fmt"
 )
 
+// MatrixTag represents a matrix tag (TagMatrix)
 type MatrixTag struct {
 	Matrix [3][3]float64
 	Offset *[3]float64 // offset is not always present
@@ -35,14 +36,14 @@ func mtxDecoder(raw []byte) (any, error) {
 	return result, nil
 }
 
-func (m *MatrixTag) Transform(input []float64) ([]float64, error) {
-	if len(input) != 3 {
-		return nil, fmt.Errorf("matrix transform expects 3 inputs, got %d", len(input))
+func (m *MatrixTag) Transform(inputs ...float64) ([]float64, error) {
+	if len(inputs) != 3 {
+		return nil, fmt.Errorf("matrix transform expects 3 inputs, got %d", len(inputs))
 	}
 	out := make([]float64, 3)
 	for i := 0; i < 3; i++ {
 		for j := 0; j < 3; j++ {
-			out[i] += m.Matrix[i][j] * input[j]
+			out[i] += m.Matrix[i][j] * inputs[j]
 		}
 	}
 	if m.Offset != nil {

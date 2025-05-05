@@ -5,6 +5,7 @@ import (
 	"errors"
 )
 
+// MeasurementTag represents a measurement tag (TagMeasurement)
 type MeasurementTag struct {
 	Observer   uint32
 	Backing    XYZNumber

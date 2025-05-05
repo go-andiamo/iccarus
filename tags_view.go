@@ -5,6 +5,7 @@ import (
 	"errors"
 )
 
+// ViewingConditionsTag represents a viewing conditions tag (TagView)
 type ViewingConditionsTag struct {
 	Illuminant     XYZNumber
 	Surround       XYZNumber

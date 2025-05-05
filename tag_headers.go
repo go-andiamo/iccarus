@@ -6,12 +6,14 @@ import (
 	"io"
 )
 
+// TagHeader represents a tag header
 type TagHeader struct {
 	Name   TagHeaderName // Name (e.g., "desc", "rXYZ", "A2B0")
 	Offset uint32        // Offset from beginning of file
 	Size   uint32        // Size of tag data in bytes
 }
 
+// TagHeaderTable represents a tag header table
 type TagHeaderTable struct {
 	Entries []TagHeader
 }

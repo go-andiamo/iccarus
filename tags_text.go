@@ -8,7 +8,8 @@ import (
 	"unicode/utf16"
 )
 
-type DescTag struct {
+// DescriptionTag represents a description tag (TagDescription)
+type DescriptionTag struct {
 	ASCII   string
 	Unicode string
 	Script  string
@@ -29,7 +30,7 @@ func descDecoder(raw []byte) (any, error) {
 
 	offset := 12 + asciiLen
 	if len(raw) < offset+4 {
-		return &DescTag{ASCII: string(ascii)}, nil // ASCII-only, no Unicode
+		return &DescriptionTag{ASCII: string(ascii)}, nil // ASCII-only, no Unicode
 	}
 
 	unicodeCount := int(binary.BigEndian.Uint32(raw[offset : offset+4]))
@@ -42,7 +43,7 @@ func descDecoder(raw []byte) (any, error) {
 	unicode := decodeUTF16BE(unicodeData)
 
 	if len(raw) <= offset {
-		return &DescTag{
+		return &DescriptionTag{
 			ASCII:   string(ascii),
 			Unicode: unicode,
 		}, nil
@@ -55,7 +56,7 @@ func descDecoder(raw []byte) (any, error) {
 	}
 	script := string(raw[offset : offset+scriptCount])
 
-	return &DescTag{
+	return &DescriptionTag{
 		ASCII:   string(ascii),
 		Unicode: unicode,
 		Script:  script,

@@ -28,8 +28,8 @@ func TestDescDecoder(t *testing.T) {
 
 	val, err := descDecoder(buf.Bytes())
 	require.NoError(t, err)
-	require.IsType(t, &DescTag{}, val)
-	desc := val.(*DescTag)
+	require.IsType(t, &DescriptionTag{}, val)
+	desc := val.(*DescriptionTag)
 	assert.Equal(t, "Test description", desc.ASCII)
 	assert.Equal(t, "Test𝄞", desc.Unicode)
 	assert.Equal(t, "Latn", desc.Script)
@@ -46,8 +46,8 @@ func TestDescDecoder_AsciiOnly(t *testing.T) {
 
 	val, err := descDecoder(buf.Bytes())
 	require.NoError(t, err)
-	require.IsType(t, &DescTag{}, val)
-	desc := val.(*DescTag)
+	require.IsType(t, &DescriptionTag{}, val)
+	desc := val.(*DescriptionTag)
 	assert.Equal(t, "Test description", desc.ASCII)
 	assert.Equal(t, "", desc.Unicode)
 	assert.Equal(t, "", desc.Script)
@@ -69,8 +69,8 @@ func TestDescDecoder_AsciiAndUnicodeOnly(t *testing.T) {
 
 	val, err := descDecoder(buf.Bytes())
 	require.NoError(t, err)
-	require.IsType(t, &DescTag{}, val)
-	desc := val.(*DescTag)
+	require.IsType(t, &DescriptionTag{}, val)
+	desc := val.(*DescriptionTag)
 	assert.Equal(t, "Test description", desc.ASCII)
 	assert.Equal(t, "Test𝄞", desc.Unicode)
 	assert.Equal(t, "", desc.Script)
@@ -81,13 +81,11 @@ func TestDescDecoder_Errors(t *testing.T) {
 		_, err := descDecoder([]byte("desc\x00\x00"))
 		assert.ErrorContains(t, err, "desc tag too short")
 	})
-
 	t.Run("InvalidASCIILength", func(t *testing.T) {
 		raw := append([]byte("desc\x00\x00\x00\x00"), []byte{0xFF, 0xFF, 0xFF, 0xFF}...) // absurd length
 		_, err := descDecoder(raw)
 		assert.ErrorContains(t, err, "invalid ASCII length")
 	})
-
 	t.Run("TruncatedUTF16", func(t *testing.T) {
 		var buf bytes.Buffer
 		buf.WriteString("desc")
@@ -100,7 +98,6 @@ func TestDescDecoder_Errors(t *testing.T) {
 		_, err := descDecoder(buf.Bytes())
 		assert.ErrorContains(t, err, "desc tag truncated: missing UTF-16 data")
 	})
-
 	t.Run("TruncatedScript", func(t *testing.T) {
 		var buf bytes.Buffer
 		buf.WriteString("desc")
@@ -155,30 +152,24 @@ func TestSigDecoder_Errors(t *testing.T) {
 
 func TestMLUCDecoder_SingleEntry(t *testing.T) {
 	var buf bytes.Buffer
-
 	// Header: signature + reserved
 	buf.WriteString("mluc")
 	buf.Write([]byte{0, 0, 0, 0})
-
 	// Count: 1 entry, record size: 12
 	_ = binary.Write(&buf, binary.BigEndian, uint32(1))
 	_ = binary.Write(&buf, binary.BigEndian, uint32(12))
-
 	// Record: lang="en", country="US", len=12, offset=28
 	buf.Write([]byte("enUS"))
 	_ = binary.Write(&buf, binary.BigEndian, uint32(12)) // length
 	_ = binary.Write(&buf, binary.BigEndian, uint32(28)) // offset
-
 	// Pad up to offset 28
 	for buf.Len() < 28 {
 		buf.WriteByte(0)
 	}
-
 	// UTF-16BE for "Hello"
 	buf.Write([]byte{
 		0x00, 'H', 0x00, 'e', 0x00, 'l', 0x00, 'l', 0x00, 'o', 0x00, '!',
 	})
-
 	val, err := mlucDecoder(buf.Bytes())
 	require.NoError(t, err)
 	require.IsType(t, &MultiLocalizedTag{}, val)
@@ -194,7 +185,6 @@ func TestMLUCDecoder_Errors(t *testing.T) {
 		_, err := mlucDecoder([]byte("mluc"))
 		assert.ErrorContains(t, err, "mluc tag too short")
 	})
-
 	t.Run("InvalidRecordSize", func(t *testing.T) {
 		buf := append([]byte("mluc\x00\x00\x00\x00"), []byte{
 			0x00, 0x00, 0x00, 0x01, // count
@@ -204,7 +194,6 @@ func TestMLUCDecoder_Errors(t *testing.T) {
 		require.Error(t, err)
 		assert.ErrorContains(t, err, "unexpected mluc record size")
 	})
-
 	t.Run("TruncatedRecords", func(t *testing.T) {
 		buf := append([]byte("mluc\x00\x00\x00\x00"), []byte{
 			0x00, 0x00, 0x00, 0x02, // count = 2
@@ -216,7 +205,6 @@ func TestMLUCDecoder_Errors(t *testing.T) {
 		require.Error(t, err)
 		assert.ErrorContains(t, err, "mluc tag too small for 2 records")
 	})
-
 	t.Run("InvalidOffsetOrLength", func(t *testing.T) {
 		var buf bytes.Buffer
 		buf.WriteString("mluc")
@@ -230,7 +218,6 @@ func TestMLUCDecoder_Errors(t *testing.T) {
 		require.Error(t, err)
 		assert.ErrorContains(t, err, "invalid string offset/length")
 	})
-
 	t.Run("InvalidUTF16", func(t *testing.T) {
 		var buf bytes.Buffer
 		buf.WriteString("mluc")
@@ -240,13 +227,11 @@ func TestMLUCDecoder_Errors(t *testing.T) {
 		buf.Write([]byte("enUS"))                            // lang + country
 		_ = binary.Write(&buf, binary.BigEndian, uint32(5))  // invalid (odd) length
 		_ = binary.Write(&buf, binary.BigEndian, uint32(32)) // offset
-
 		// pad to 32
 		for buf.Len() < 32 {
 			buf.WriteByte(0)
 		}
 		buf.Write([]byte{0x00, 'B', 0x00, 'a', 0x00}) // 5 bytes, odd!
-
 		_, err := mlucDecoder(buf.Bytes())
 		require.Error(t, err)
 		assert.ErrorContains(t, err, "invalid string offset/length in mluc record")
@@ -260,7 +245,6 @@ func TestDecodeUTF16BE(t *testing.T) {
 		str := decodeUTF16BE(utf16be)
 		assert.Equal(t, "Go!", str)
 	})
-
 	t.Run("WithSurrogatePair", func(t *testing.T) {
 		// "Test𝄞" (𝄞 = U+1D11E = surrogate pair)
 		runes := []rune("Test𝄞")

@@ -6,6 +6,7 @@ import (
 	"fmt"
 )
 
+// ModularTag represents a modular tag (TagModularAB / TagModularBA)
 type ModularTag struct {
 	Signature      string
 	InputChannels  uint8
@@ -117,7 +118,7 @@ func (m *ModularTag) transformChannels(channels []float64) ([]float64, error) {
 				return nil, fmt.Errorf("failed decoding modular element %q: %w", element.Name, err)
 			}
 			if proc, ok := val.(ChannelTransformer); ok {
-				result, err = proc.Transform(result)
+				result, err = proc.Transform(result...)
 				if err != nil {
 					return nil, fmt.Errorf("failed processing modular element %q: %w", element.Name, err)
 				}

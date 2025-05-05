@@ -14,7 +14,6 @@ func TestProfile_ToCIEXYZ_Errors(t *testing.T) {
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "A2B0 tag not found")
 	})
-
 	t.Run("Tag Not Found (nil)", func(t *testing.T) {
 		p := &Profile{
 			tagsByHeader: map[TagHeaderName]*Tag{
@@ -25,7 +24,6 @@ func TestProfile_ToCIEXYZ_Errors(t *testing.T) {
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "A2B0 tag not found")
 	})
-
 	t.Run("Tag fails to decode", func(t *testing.T) {
 		p := &Profile{
 			tagsByHeader: map[TagHeaderName]*Tag{
@@ -38,7 +36,6 @@ func TestProfile_ToCIEXYZ_Errors(t *testing.T) {
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "failed to decode A2B0 tag:")
 	})
-
 	t.Run("Tag does not implement interface", func(t *testing.T) {
 		p := &Profile{
 			tagsByHeader: map[TagHeaderName]*Tag{
@@ -51,7 +48,6 @@ func TestProfile_ToCIEXYZ_Errors(t *testing.T) {
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "A2B0 tag does not implement interface ToCIEXYZ")
 	})
-
 	t.Run("Tag incorrect number of channels", func(t *testing.T) {
 		p := &Profile{
 			tagsByHeader: map[TagHeaderName]*Tag{
@@ -64,7 +60,6 @@ func TestProfile_ToCIEXYZ_Errors(t *testing.T) {
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "expected 3 input channels, got 0")
 	})
-
 	t.Run("Tag incorrect number of channels (cached)", func(t *testing.T) {
 		p := &Profile{
 			a2b0: &ModularTag{InputChannels: 3},
@@ -82,7 +77,6 @@ func TestProfile_FromCIEXYZ_Errors(t *testing.T) {
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "B2A0 tag not found")
 	})
-
 	t.Run("Tag Not Found (nil)", func(t *testing.T) {
 		p := &Profile{
 			tagsByHeader: map[TagHeaderName]*Tag{
@@ -93,7 +87,6 @@ func TestProfile_FromCIEXYZ_Errors(t *testing.T) {
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "B2A0 tag not found")
 	})
-
 	t.Run("Tag fails to decode", func(t *testing.T) {
 		p := &Profile{
 			tagsByHeader: map[TagHeaderName]*Tag{
@@ -106,7 +99,6 @@ func TestProfile_FromCIEXYZ_Errors(t *testing.T) {
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "failed to decode B2A0 tag:")
 	})
-
 	t.Run("Tag does not implement interface", func(t *testing.T) {
 		p := &Profile{
 			tagsByHeader: map[TagHeaderName]*Tag{
@@ -119,7 +111,6 @@ func TestProfile_FromCIEXYZ_Errors(t *testing.T) {
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "B2A0 tag does not implement interface FromCIEXYZ")
 	})
-
 	t.Run("Tag incorrect number of channels", func(t *testing.T) {
 		p := &Profile{
 			tagsByHeader: map[TagHeaderName]*Tag{
@@ -132,7 +123,6 @@ func TestProfile_FromCIEXYZ_Errors(t *testing.T) {
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "expected 3 input channels, got 0")
 	})
-
 	t.Run("Tag incorrect number of channels (cached)", func(t *testing.T) {
 		p := &Profile{
 			b2a0: &ModularTag{InputChannels: 3},

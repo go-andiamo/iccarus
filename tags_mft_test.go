@@ -115,8 +115,7 @@ func TestMFT2Transform(t *testing.T) {
 		for i := range tag.OutputCurves[0] {
 			tag.OutputCurves[0][i] = uint16(i * 257) // evenly spaced over 256 steps
 		}
-
-		out, err := tag.Transform([]float64{0.5})
+		out, err := tag.Transform(0.5)
 		require.NoError(t, err)
 		require.Len(t, out, 1)
 		assert.InDelta(t, 0.5, out[0], 0.01)
@@ -134,7 +133,7 @@ func TestMFT2Transform(t *testing.T) {
 				{0, 65535},
 			},
 		}
-		_, err := tag.Transform([]float64{0.5})
+		_, err := tag.Transform(0.5)
 		assert.ErrorContains(t, err, "expected 2 input channels")
 	})
 	t.Run("Error_CLUTTooShort", func(t *testing.T) {
@@ -150,7 +149,7 @@ func TestMFT2Transform(t *testing.T) {
 				{0, 65535},
 			},
 		}
-		_, err := tag.Transform([]float64{0.5})
+		_, err := tag.Transform(0.5)
 		assert.ErrorContains(t, err, "CLUT index out of bounds")
 	})
 	t.Run("Error_InputCurveIndexOutOfBounds", func(t *testing.T) {
@@ -166,7 +165,7 @@ func TestMFT2Transform(t *testing.T) {
 				{0, 65535},
 			},
 		}
-		_, err := tag.Transform([]float64{0.5})
+		_, err := tag.Transform(0.5)
 		assert.ErrorContains(t, err, "input curve index out of bounds")
 	})
 	t.Run("Error_OutputCurveIndexOutOfBounds", func(t *testing.T) {
@@ -182,7 +181,7 @@ func TestMFT2Transform(t *testing.T) {
 				{}, // empty
 			},
 		}
-		_, err := tag.Transform([]float64{0.5})
+		_, err := tag.Transform(0.5)
 		assert.ErrorContains(t, err, "output curve index out of bounds")
 	})
 }
@@ -278,10 +277,8 @@ func TestMFT1Tag_Transform(t *testing.T) {
 			1, 1, 0,
 			1, 1, 1,
 		}
-
 		// Midpoint input, should interpolate to ~[0.5, 0.5, 0.5]
-		input := []float64{0.5, 0.5, 0.5}
-		out, err := tag.Transform(input)
+		out, err := tag.Transform(0.5, 0.5, 0.5)
 		require.NoError(t, err)
 		require.Len(t, out, 3)
 		for i := range out {
@@ -290,7 +287,7 @@ func TestMFT1Tag_Transform(t *testing.T) {
 	})
 	t.Run("WrongInputLength", func(t *testing.T) {
 		tag := &MFT1Tag{InputChannels: 3}
-		_, err := tag.Transform([]float64{0.5})
+		_, err := tag.Transform(0.5)
 		assert.ErrorContains(t, err, "expected 3 input channels")
 	})
 	t.Run("CLUTBoundsError", func(t *testing.T) {
@@ -302,7 +299,7 @@ func TestMFT1Tag_Transform(t *testing.T) {
 			OutputCurves:   [][]uint8{make([]uint8, 256)},
 			CLUT:           []float64{}, // empty = out of bounds
 		}
-		_, err := tag.Transform([]float64{0.5})
+		_, err := tag.Transform(0.5)
 		assert.ErrorContains(t, err, "CLUT index out of bounds")
 	})
 }
